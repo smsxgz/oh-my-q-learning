@@ -10,13 +10,13 @@ Oh My Q-Learning!
 Ascii Art from [ascii-code.com](https://www.ascii-code.com/ascii-art/animals/dogs.php)
 
 
-Here is my implementation of the Q-learning algorithms.
+Here is my implementation of the Q-learning algorithms by tensorflow.
 * DQN
 * Double DQN
 * [Distributional DQN](https://arxiv.org/abs/1707.06887)
 
 
-this repository is just a demo now, I will build it step by step.
+This repository is just a demo now, I will build it step by step.
 
 ----
-My thanks for [Denny Britz](https://github.com/dennybritz/reinforcement-learning), Min RK and Guillaume Aubert.
+My thanks for [Denny Britz](https://github.com/dennybritz/reinforcement-learning) and Min RK.
