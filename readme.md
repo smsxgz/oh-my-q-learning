@@ -20,3 +20,6 @@ This repository is just a demo now, I will build it step by step.
 
 ----
 My thanks for [Denny Britz](https://github.com/dennybritz/reinforcement-learning) and Min RK.
+
+---
+smsxgz@gmail.com

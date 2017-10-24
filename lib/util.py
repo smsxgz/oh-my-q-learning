@@ -1,4 +1,5 @@
 import numpy as np
+from collections import namedtuple
 
 
 def str_reward(rewards, k):
@@ -16,3 +17,7 @@ def str_reward(rewards, k):
     output += '+' * 50 + '\n\n'
 
     return output
+
+
+Transition = namedtuple("Transition",
+                        ["state", "action", "reward", "next_state", "done"])

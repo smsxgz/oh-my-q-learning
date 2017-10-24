@@ -1,23 +1,17 @@
 import numpy as np
 import tensorflow as tf
-from estimator import Estimator
+from qlearning.estimator import Estimator
 
 
 class DistributionEstimator(Estimator):
     def __init__(self,
                  action_n,
-                 vmin=-10,
-                 vmax=10,
                  N=51,
                  summary_dir=None,
                  network=None,
                  x_shape=[None, 84, 84, 4],
                  scope="estimator"):
-        self.vmin = vmin
-        self.vamx = vmax
         self.N = N
-        self.split_points = np.linspace(vmin, vmax, N)
-        self.delta = (vmax - vmin) / (N - 1)
         super(DistributionEstimator, self).__init__(action_n, summary_dir,
                                                     network, x_shape, scope)
 
