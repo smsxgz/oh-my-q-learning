@@ -77,9 +77,14 @@ def train_atari():
             c.daemon = True
             c.start()
 
-        OffMaster(flags.init_memory_size, flags.memory_size,
-                  flags.estimator_update_every, backend, frontend,
-                  flags.batch_size, estimator_update_func)
+        OffMaster(
+            init_memory_size=flags.init_memory_size,
+            memory_size=flags.memory_size,
+            estimator_update_every=flags.estimator_update_every,
+            backend_socket=backend,
+            frontend_socket=frontend,
+            batch_size=flags.batch_size,
+            estimator_update_callable=estimator_update_func)
 
         IOLoop.instance().start()
 
