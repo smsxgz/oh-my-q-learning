@@ -26,19 +26,28 @@ class Agent(Process):
         state = self.env.reset()
         socket.send(msgpack.dumps(('reset', state)))
         episode_reward = 0
+        episode_length = 0
         while True:
             reply = socket.recv()
-            if reply == b'reset':
+            action = msgpack.loads(reply)
+            next_state, reward, done, _ = self.env.step(action)
+            episode_reward += reward
+            episode_length += 1
+            socket.send(
+                msgpack.dumps(('step', state, action, np.sign(reward),
+                               next_state, done)))
+            state = next_state
+            if done:
+                reply = socket.recv()
+                assert reply == b'reset'
                 self.rewards_stats.append(episode_reward)
-                print(str_reward(self.rewards_stats, 50))
+                print('\n'.join([
+                    '\n',
+                    self.identity.decode('utf-8'), 'episode length: {}'.format(
+                        episode_length),
+                    str_reward(self.rewards_stats, 50)
+                ]))
                 episode_reward = 0
+                episode_length = 0
                 state = self.env.reset()
                 socket.send(msgpack.dumps(('reset', state)))
-            else:
-                action = msgpack.loads(reply)
-                next_state, reward, done, _ = self.env.step(action)
-                episode_reward += reward
-                socket.send(
-                    msgpack.dumps(('step', state, action, np.sign(reward),
-                                   next_state, done)))
-                state = next_state

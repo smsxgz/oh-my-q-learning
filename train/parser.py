@@ -26,7 +26,6 @@ def get_parser():
     # for memory buffer
     parser.add_argument('--init_memory_size', type=int, default=50000)
     parser.add_argument('--memory_size', type=int, default=500000)
-    parser.add_argument('--estimator_update_every', type=int, default=1)
 
     # for distributional DQN
     parser.add_argument('--vmin', type=float, default=-10.0)

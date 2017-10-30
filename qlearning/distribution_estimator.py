@@ -45,8 +45,8 @@ class DistributionEstimator(Estimator):
 
             self.summaries = tf.summary.merge([
                 tf.summary.scalar("loss", self.loss),
-                tf.summary.histogram("loss_hist", self.losses),
-                tf.summary.scalar("max_loss", tf.reduce_max(self.losses))
+                tf.summary.scalar("max_loss", tf.reduce_max(self.losses)),
+                tf.summary.scalar("min_loss", tf.reduce_min(self.losses))
             ])
 
     def dis_predict(self, sess, s):

@@ -80,7 +80,7 @@ def train_atari():
         OffMaster(
             init_memory_size=flags.init_memory_size,
             memory_size=flags.memory_size,
-            estimator_update_every=flags.estimator_update_every,
+            estimator_update_every=flags.num_agent * 20,
             backend_socket=backend,
             frontend_socket=frontend,
             batch_size=flags.batch_size,

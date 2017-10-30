@@ -4,8 +4,8 @@ from collections import namedtuple
 
 def str_reward(rewards, k):
     """For print list of rewards."""
-    output = '\n\n'
-    output += '+' * 50 + '\n'
+    output = '+' * 50 + '\n'
+    output += '+  total games: {}'.format(len(rewards))
     output += '+  last one:\n'
     output += '+  {}\n'.format(rewards[-1])
     output += '+  recent {}:\n'.format(k)

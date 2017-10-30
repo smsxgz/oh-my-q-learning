@@ -84,7 +84,7 @@ class FrameStack(gym.Wrapper):
 
     def _get_ob(self):
         assert len(self.frames) == self.k
-        return np.stack(self.frames)
+        return np.concatenate(self.frames, axis=-1)
 
 
 def make_env(game_name):
