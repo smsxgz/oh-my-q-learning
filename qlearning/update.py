@@ -53,9 +53,6 @@ class Update(object):
 
 
 class DoubleDQNUpdate(Update):
-    def __init__(self, **kwargs):
-        super(DoubleDQNUpdate, self).__init__(**kwargs)
-
     def _update(self, states_batch, action_batch, reward_batch,
                 next_states_batch, done_batch):
         batch_size = states_batch.shape[0]

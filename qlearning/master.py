@@ -1,23 +1,25 @@
+import zmq
+import random
 import msgpack
 import numpy as np
 import msgpack_numpy
+from collections import deque
 from lib.util import Transition
 from zmq.eventloop.ioloop import IOLoop
 from zmq.eventloop.zmqstream import ZMQStream
 msgpack_numpy.patch()
 
 
-class DQNMaster(object):
+class Master(object):
     """A broker for DQN, but I would like to call it master!!!"""
 
     def __init__(self, backend_socket, frontend_socket, batch_size,
-                 callable_update):
+                 estimator_update_callable):
         self.available_workers = 0
         self.workers = []
 
-        self.memory = []
         self.batch_size = batch_size
-        self.update = callable_update
+        self.estimator_update = estimator_update_callable
 
         self.backend = ZMQStream(backend_socket)
         self.frontend = ZMQStream(frontend_socket)
@@ -54,11 +56,7 @@ class DQNMaster(object):
             self.worker_send(msg)
         elif request[0] == 'step':
             t = Transition(*request[1:])
-            self.memory.append(t)
-            if len(self.memory) == self.batch_size:
-                samples = map(np.array, zip(*self.memory))
-                self.update(*samples)
-                self.memory = []
+            self.update(t)
 
             if t.done:
                 self.frontend.send_multipart([client_addr, b'', b'reset'])
@@ -75,3 +73,54 @@ class DQNMaster(object):
         if self.available_workers == 0:
             # stop receiving until workers become available again
             self.frontend.stop_on_recv()
+
+
+class OnMaster(Master):
+    """For online learning."""
+
+    def __init__(self, **kwargs):
+        super(OffMaster, self).__init__(**kwargs)
+        self.memory = []
+
+    def update(self, transition):
+        self.memory.append(transition)
+        if len(self.memory) == self.batch_size:
+            samples = map(np.array, zip(*self.memory))
+            self.estimator_update(*samples)
+            self.memory = []
+
+
+class OffMaster(Master):
+    """For memory buffer learning."""
+
+    def __init__(self, init_memory_size, memory_size, estimator_update_every,
+                 **kwargs):
+        super(OffMaster, self).__init__(**kwargs)
+        self.init_memory_size = init_memory_size
+        self.memory = deque(maxlen=memory_size)
+        self.estimator_update_every = estimator_update_every
+        self.tot = 0
+
+    def update(self, transition):
+        self.memory.append(transition)
+        self.tot += 1
+        if len(self.memory) > self.init_memory_size and \
+                self.tot % self.estimator_update_every == 0:
+            samples = random.sample(self.memory, self.batch_size)
+            samples = map(np.array, zip(*samples))
+            self.estimator_update(*samples)
+
+
+def estimator_worker(url, i, sess, q_estimator, policy):
+    context = zmq.Context()
+    socket = context.socket(zmq.REQ)
+    identity = ('Worker-%d' % i).encode('utf-8')
+    socket.identity = identity
+    socket.connect(url)
+
+    socket.send(b'READY')
+    while True:
+        address, empty, request = socket.recv_multipart()
+        q_values = q_estimator.predict(sess, [msgpack.loads(request)])
+        action = policy(q_values)
+        socket.send_multipart([address, b'', msgpack.dumps(action)])

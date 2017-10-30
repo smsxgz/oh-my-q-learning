@@ -4,16 +4,10 @@ from qlearning.estimator import Estimator
 
 
 class DistributionEstimator(Estimator):
-    def __init__(self,
-                 action_n,
-                 N=51,
-                 summary_dir=None,
-                 network=None,
-                 x_shape=[None, 84, 84, 4],
-                 scope="estimator"):
+    def __init__(self, action_n, vmin=-10, vmax=10, N=51, **kwargs):
         self.N = N
-        super(DistributionEstimator, self).__init__(action_n, summary_dir,
-                                                    network, x_shape, scope)
+        self.split_points = np.linspace(vmin, vmax, N)
+        super(DistributionEstimator, self).__init__(action_n, **kwargs)
 
     def _build_model(self):
         """Builds the Tensorflow graph."""
@@ -42,8 +36,10 @@ class DistributionEstimator(Estimator):
                 self.y_pl * tf.log(self.action_probs), axis=-1)
             self.loss = tf.reduce_mean(self.losses)
 
-            self.optimizer = tf.train.RMSPropOptimizer(0.00025, 0.99, 0.0,
-                                                       1e-6)
+            # self.optimizer = tf.train.RMSPropOptimizer(0.00025, 0.99, 0.0,
+            #                                            1e-6)
+            self.optimizer = tf.train.AdamOptimizer(1e-4)
+
             self.train_op = self.optimizer.minimize(
                 self.loss, global_step=tf.contrib.framework.get_global_step())
 

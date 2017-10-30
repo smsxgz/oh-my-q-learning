@@ -2,16 +2,16 @@ import zmq
 import msgpack
 import numpy as np
 import msgpack_numpy
-from lib.wrappers import make_env
+from lib.atari_wrapper import make_env
 from lib.util import str_reward
 from multiprocessing import Process
 
 msgpack_numpy.patch()
 
 
-class AgentEnv(Process):
+class Agent(Process):
     def __init__(self, game_name, url, i):
-        super(AgentEnv, self).__init__()
+        super(Agent, self).__init__()
         self.env = make_env(game_name)
         self.rewards_stats = []
         self.url = url
