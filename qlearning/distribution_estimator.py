@@ -34,14 +34,17 @@ class DistributionEstimator(Estimator):
                 self.y_pl * tf.log(self.action_probs), axis=-1)
             self.loss = tf.reduce_mean(self.losses)
 
-            self.train_op = self.optimizer.minimize(
-                self.loss, global_step=tf.contrib.framework.get_global_step())
+            if self.optimizer:
+                self.train_op = self.optimizer.minimize(
+                    self.loss,
+                    global_step=tf.contrib.framework.get_global_step())
 
-            self.summaries = tf.summary.merge([
-                tf.summary.scalar("loss", self.loss),
-                tf.summary.scalar("max_loss", tf.reduce_max(self.losses)),
-                tf.summary.scalar("min_loss", tf.reduce_min(self.losses))
-            ])
+            if self.summary_writer:
+                self.summaries = tf.summary.merge([
+                    tf.summary.scalar("loss", self.loss),
+                    tf.summary.scalar("max_loss", tf.reduce_max(self.losses)),
+                    tf.summary.scalar("min_loss", tf.reduce_min(self.losses))
+                ])
 
     def dis_predict(self, sess, s):
         probs = sess.run(self.probs, {self.X_pl: s})

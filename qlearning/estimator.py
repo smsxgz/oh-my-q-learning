@@ -106,17 +106,19 @@ class Estimator(object):
                                                 self.action_predictions)
             self.loss = tf.reduce_mean(self.losses)
 
-            self.train_op = self.optimizer.minimize(
-                self.loss, global_step=tf.contrib.framework.get_global_step())
+            if self.optimizer:
+                self.train_op = self.optimizer.minimize(
+                    self.loss,
+                    global_step=tf.contrib.framework.get_global_step())
 
-            # Summaries for Tensorboard
-            self.summaries = tf.summary.merge([
-                tf.summary.scalar("loss", self.loss),
-                tf.summary.histogram("loss_hist", self.losses),
-                tf.summary.histogram("q_values_hist", self.predictions),
-                tf.summary.scalar("max_q_value",
-                                  tf.reduce_max(self.predictions))
-            ])
+            if self.summary_writer:
+                self.summaries = tf.summary.merge([
+                    tf.summary.scalar("loss", self.loss),
+                    tf.summary.histogram("loss_hist", self.losses),
+                    tf.summary.histogram("q_values_hist", self.predictions),
+                    tf.summary.scalar("max_q_value",
+                                      tf.reduce_max(self.predictions))
+                ])
 
     def predict(self, sess, s):
         return sess.run(self.predictions, {self.X_pl: s})
