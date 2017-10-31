@@ -53,6 +53,7 @@ class Estimator(object):
             scope:       name of the varible scope
         """
         self.action_n = action_n
+        self.optimizer = optimizer
         self.summary_dir = summary_dir
         self.network = network if network else self._network
         self.x_shape = x_shape
