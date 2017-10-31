@@ -12,6 +12,8 @@ def get_parser():
     parser.add_argument('--num_agent', type=int, default=FLAGS.num_agent)
     parser.add_argument('--num_worker', type=int, default=FLAGS.num_worker)
     parser.add_argument('--batch_size', type=int, default=FLAGS.batch_size)
+    parser.add_argument(
+        '--learning_rate', type=float, default=FLAGS.learning_rate)
 
     # for epsilon greedy policy
     parser.add_argument(
