@@ -1,5 +1,6 @@
 import math
 import tensorflow as tf
+
 path = 'test'
 used_gpu = '0'
 num_agent = 8

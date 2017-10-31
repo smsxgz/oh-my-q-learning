@@ -1,4 +1,6 @@
 import os
+import sys
+sys.path.insert(0, os.getcwd())
 import gym
 import qlearning
 import tensorflow as tf
@@ -80,7 +82,7 @@ def train_atari():
         qlearning.OffMaster(
             init_memory_size=flags.init_memory_size,
             memory_size=flags.memory_size,
-            estimator_update_every=flags.num_agent * 20,
+            estimator_update_every=1,
             url_worker=flags.url_worker,
             url_client=flags.url_client,
             batch_size=flags.batch_size,
