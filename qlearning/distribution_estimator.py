@@ -13,7 +13,7 @@ class DistributionEstimator(Estimator):
         """Builds the Tensorflow graph."""
         with tf.variable_scope(self.scope):
             self.X_pl = tf.placeholder(
-                shape=self.x_shape, dtype=tf.float32, name="X")
+                shape=self.x_shape, dtype=tf.uint8, name="X")
             self.actions_pl = tf.placeholder(
                 shape=[None], dtype=tf.int32, name="actions")
             self.y_pl = tf.placeholder(

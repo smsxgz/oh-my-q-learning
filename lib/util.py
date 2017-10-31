@@ -4,19 +4,19 @@ from collections import namedtuple
 
 def str_reward(rewards, k):
     """For print list of rewards."""
-    output = '+' * 50 + '\n'
-    output += '+  total games: {}'.format(len(rewards))
-    output += '+  last one:\n'
-    output += '+  {}\n'.format(rewards[-1])
-    output += '+  recent {}:\n'.format(k)
-    output += '+  max: {}, min: {}, mean: {:.3f}\n'.format(
-        max(rewards[-k:]), min(rewards), np.mean(rewards[-k:]))
-    output += '+  total:\n'
-    output += '+  max: {}, mean: {:.3f}\n'.format(
-        max(rewards), np.mean(rewards))
-    output += '+' * 50 + '\n\n'
+    output = [
+        '+' * 50,
+        'last one:',
+        str(rewards[-1]),
+        'recent {}:'.format(k),
+        'max: {}, min: {}, mean: {:.3f}'.format(
+            max(rewards[-k:]), min(rewards), np.mean(rewards[-k:])),
+        'total:',
+        'games: {}, max: {}, mean: {:.3f}'.format(
+            len(rewards), max(rewards), np.mean(rewards)),
+    ]
 
-    return output
+    return '\n+  '.join(output) + '\n' + '+' * 50 + '\n'
 
 
 Transition = namedtuple("Transition",

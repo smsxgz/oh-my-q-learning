@@ -65,8 +65,8 @@ class Estimator(object):
 
     @staticmethod
     def _network(X_pl):
-        conv1 = tf.contrib.layers.conv2d(
-            X_pl, 32, 8, 4, activation_fn=tf.nn.relu)
+        x = tf.cast(X_pl, tf.float32) / 255.0
+        conv1 = tf.contrib.layers.conv2d(x, 32, 8, 4, activation_fn=tf.nn.relu)
         conv2 = tf.contrib.layers.conv2d(
             conv1, 64, 4, 2, activation_fn=tf.nn.relu)
         conv3 = tf.contrib.layers.conv2d(
@@ -82,7 +82,7 @@ class Estimator(object):
         """Builds the Tensorflow graph."""
         with tf.variable_scope(self.scope):
             self.X_pl = tf.placeholder(
-                shape=self.x_shape, dtype=tf.float32, name="X")
+                shape=self.x_shape, dtype=tf.uint8, name="X")
             self.actions_pl = tf.placeholder(
                 shape=[None], dtype=tf.int32, name="actions")
             self.y_pl = tf.placeholder(

@@ -24,9 +24,9 @@ class EpsilonGreedy(object):
     def __call__(self, q_values):
         epsilon = self.epsilon
         if self.summary_writer:
-            episode_summary = tf.Summary()
-            episode_summary.value.add(simple_value=epsilon, tag='epsilon')
-            self.summary_writer.add_summary(episode_summary, self.tot)
+            summary = tf.Summary()
+            summary.value.add(simple_value=epsilon, tag='epsilon')
+            self.summary_writer.add_summary(summary, self.tot)
 
         if random.random() > epsilon:
             action = np.argmax(q_values)

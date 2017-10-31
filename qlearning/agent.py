@@ -1,15 +1,17 @@
 import zmq
+import pickle
 import msgpack
 import numpy as np
 import msgpack_numpy
-from lib.atari_wrapper import make_env
 from lib.util import str_reward
+from threading import Thread
 from multiprocessing import Process
+from lib.atari_wrapper import make_env
 
 msgpack_numpy.patch()
 
 
-class Agent(Process):
+class Agent(Thread):
     def __init__(self, game_name, url, i):
         super(Agent, self).__init__()
         self.env = make_env(game_name)
@@ -47,6 +49,11 @@ class Agent(Process):
                         episode_length),
                     str_reward(self.rewards_stats, 50)
                 ]))
+                if len(self.rewards_stats) % 100 == 0:
+                    f = open('./tmp/' + self.identity.decode('utf-8') + '.pkl',
+                             'wb')
+                    pickle.dump(self.rewards_stats, f)
+                    f.close()
                 episode_reward = 0
                 episode_length = 0
                 state = self.env.reset()

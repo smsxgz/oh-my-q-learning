@@ -11,18 +11,28 @@ msgpack_numpy.patch()
 
 
 class Master(object):
-    """A broker for DQN, but I would like to call it master!!!"""
+    """
+        Broker for asynchronous interaction,
+        But I would like to call it Master!!!
+    """
 
-    def __init__(self, backend_socket, frontend_socket, batch_size,
+    def __init__(self, url_worker, url_client, batch_size,
                  estimator_update_callable):
+
+        context = zmq.Context()
+        frontend = context.socket(zmq.ROUTER)
+        frontend.bind(url_client)
+        backend = context.socket(zmq.ROUTER)
+        backend.bind(url_worker)
+
         self.available_workers = 0
         self.workers = []
 
         self.batch_size = batch_size
         self.estimator_update = estimator_update_callable
 
-        self.backend = ZMQStream(backend_socket)
-        self.frontend = ZMQStream(frontend_socket)
+        self.backend = ZMQStream(backend)
+        self.frontend = ZMQStream(frontend)
         self.backend.on_recv(self.handle_backend)
 
         self.loop = IOLoop.instance()
@@ -52,7 +62,7 @@ class Master(object):
         request = msgpack.loads(request)
         if request[0] == 'reset':
             state = request[1]
-            msg = [b'', client_addr, b'', msgpack.dumps(state)]
+            msg = [b'', client_addr, b'', msgpack.dumps([state])]
             self.worker_send(msg)
         elif request[0] == 'step':
             t = Transition(*request[1:])
@@ -61,7 +71,7 @@ class Master(object):
             if t.done:
                 self.frontend.send_multipart([client_addr, b'', b'reset'])
             else:
-                msg = [b'', client_addr, b'', msgpack.dumps(t.next_state)]
+                msg = [b'', client_addr, b'', msgpack.dumps([t.next_state])]
                 self.worker_send(msg)
 
     def worker_send(self, msg):
@@ -121,6 +131,6 @@ def estimator_worker(url, i, sess, q_estimator, policy):
     socket.send(b'READY')
     while True:
         address, empty, request = socket.recv_multipart()
-        q_values = q_estimator.predict(sess, [msgpack.loads(request)])
-        action = policy(q_values)
-        socket.send_multipart([address, b'', msgpack.dumps(action)])
+        q_values = q_estimator.predict(sess, msgpack.loads(request))
+        actions = list(map(policy, q_values))
+        socket.send_multipart([address, b'', msgpack.dumps(actions)])

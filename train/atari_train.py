@@ -1,5 +1,4 @@
 import os
-import zmq
 import qlearning
 import tensorflow as tf
 from threading import Thread
@@ -58,13 +57,6 @@ def train_atari():
             update_target_estimator_every=flags.update_target_estimator_every,
             save_model_every=flags.save_model_every)
 
-        # Prepare our context and sockets
-        context = zmq.Context()
-        frontend = context.socket(zmq.ROUTER)
-        frontend.bind(flags.url_client)
-        backend = context.socket(zmq.ROUTER)
-        backend.bind(flags.url_worker)
-
         for i in range(flags.num_worker):
             w = Thread(
                 target=estimator_worker,
@@ -81,8 +73,8 @@ def train_atari():
             init_memory_size=flags.init_memory_size,
             memory_size=flags.memory_size,
             estimator_update_every=flags.num_agent * 20,
-            backend_socket=backend,
-            frontend_socket=frontend,
+            url_worker=flags.url_worker,
+            url_client=flags.url_client,
             batch_size=flags.batch_size,
             estimator_update_callable=estimator_update_func)
 
