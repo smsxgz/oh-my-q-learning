@@ -132,5 +132,5 @@ def estimator_worker(url, i, sess, q_estimator, policy):
     while True:
         address, empty, request = socket.recv_multipart()
         q_values = q_estimator.predict(sess, msgpack.loads(request))
-        actions = list(map(policy, q_values))
-        socket.send_multipart([address, b'', msgpack.dumps(actions)])
+        action = policy(q_values[0])
+        socket.send_multipart([address, b'', msgpack.dumps(action)])
