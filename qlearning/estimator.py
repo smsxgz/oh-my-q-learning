@@ -39,6 +39,7 @@ class Estimator(object):
 
     def __init__(self,
                  action_n,
+                 optimizer=None,
                  summary_dir=None,
                  network=None,
                  x_shape=[None, 84, 84, 4],
@@ -105,8 +106,6 @@ class Estimator(object):
                                                 self.action_predictions)
             self.loss = tf.reduce_mean(self.losses)
 
-            # Optimizer Parameters from original paper
-            self.optimizer = tf.train.RMSPropOptimizer(1e-3, 0.99, 0.0, 1e-6)
             self.train_op = self.optimizer.minimize(
                 self.loss, global_step=tf.contrib.framework.get_global_step())
 

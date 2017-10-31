@@ -1,36 +1,44 @@
 import os
 import gym
 import argparse
+import train as FLAGS
 
 
 def get_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('-g', '--game_name', type=str)
-    parser.add_argument('-p', '--path', type=str)
-    parser.add_argument('--used_gpu', type=str, default='0')
-    parser.add_argument('--num_agent', type=int, default=8)
-    parser.add_argument('--num_worker', type=int, default=4)
-    parser.add_argument('--batch_size', type=int, default=256)
+    parser.add_argument('-p', '--path', type=str, default=FLAGS.path)
+    parser.add_argument('--used_gpu', type=str, default=FLAGS.used_gpu)
+    parser.add_argument('--num_agent', type=int, default=FLAGS.num_agent)
+    parser.add_argument('--num_worker', type=int, default=FLAGS.num_worker)
+    parser.add_argument('--batch_size', type=int, default=FLAGS.batch_size)
 
     # for epsilon greedy policy
-    parser.add_argument('--epsilon_start', type=float, default=1.0)
-    parser.add_argument('--epsilon_end', type=float, default=0.04)
-    parser.add_argument('--epsilon_decay_steps', type=int, default=500000)
+    parser.add_argument(
+        '--epsilon_start', type=float, default=FLAGS.epsilon_start)
+    parser.add_argument('--epsilon_end', type=float, default=FLAGS.epsilon_end)
+    parser.add_argument(
+        '--epsilon_decay_steps', type=int, default=FLAGS.epsilon_decay_steps)
 
     # for update functions
-    parser.add_argument('--discount_factor', type=float, default=0.99)
     parser.add_argument(
-        '--update_target_estimator_every', type=int, default=1000)
-    parser.add_argument('--save_model_every', type=int, default=100)
+        '--discount_factor', type=float, default=FLAGS.discount_factor)
+    parser.add_argument(
+        '--update_target_estimator_every',
+        type=int,
+        default=FLAGS.update_target_estimator_every)
+    parser.add_argument(
+        '--save_model_every', type=int, default=FLAGS.save_model_every)
 
     # for memory buffer
-    parser.add_argument('--init_memory_size', type=int, default=50000)
-    parser.add_argument('--memory_size', type=int, default=500000)
+    parser.add_argument(
+        '--init_memory_size', type=int, default=FLAGS.init_memory_size)
+    parser.add_argument('--memory_size', type=int, default=FLAGS.memory_size)
 
     # for distributional DQN
-    parser.add_argument('--vmin', type=float, default=-10.0)
-    parser.add_argument('--vmax', type=float, default=10.0)
-    parser.add_argument('--N', type=int, default=51)
+    parser.add_argument('--vmin', type=float, default=FLAGS.vmin)
+    parser.add_argument('--vmax', type=float, default=FLAGS.vmax)
+    parser.add_argument('--N', type=int, default=FLAGS.N)
 
     flags = parser.parse_args()
     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
@@ -44,5 +52,10 @@ def get_parser():
 
     env = gym.make(flags.game_name)
     flags.action_n = env.action_space.n
+
+    # We need observation shape for simple games and mujoco
+    flags.observation_n = env.observation_space.shape[0]
+    flags.network = FLAGS.network_struct(flags.observation_n, flags.action_n)
+
     env.close()
     return flags

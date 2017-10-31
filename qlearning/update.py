@@ -31,7 +31,10 @@ class Update(object):
         latest_checkpoint = tf.train.latest_checkpoint(checkpoint_dir)
         if latest_checkpoint:
             print("Loading model checkpoint {}...\n".format(latest_checkpoint))
-            self.saver.restore(sess, latest_checkpoint)
+            try:
+                self.saver.restore(sess, latest_checkpoint)
+            except:
+                print('Loading failed, we will Start from scratch!!')
 
     def __call__(self, *args):
         loss = self._update(*args)

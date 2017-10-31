@@ -87,7 +87,7 @@ class FrameStack(gym.Wrapper):
         return np.concatenate(self.frames, axis=-1)
 
 
-def make_env(game_name):
+def wrapper_env(game_name):
     env = gym.make(game_name)
     # env = EpisodicLifeEnv(env)
     env = WarpFrame(env)

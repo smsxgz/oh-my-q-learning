@@ -4,17 +4,15 @@ import msgpack
 import numpy as np
 import msgpack_numpy
 from lib.util import str_reward
-from threading import Thread
 from multiprocessing import Process
-from lib.atari_wrapper import make_env
 
 msgpack_numpy.patch()
 
 
-class Agent(Thread):
-    def __init__(self, game_name, url, i):
+class Agent(Process):
+    def __init__(self, make_env, url, i):
         super(Agent, self).__init__()
-        self.env = make_env(game_name)
+        self.env = make_env()
         self.rewards_stats = []
         self.url = url
         self.identity = ('Agent-%d' % i).encode('utf-8')

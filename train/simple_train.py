@@ -1,5 +1,7 @@
 import os
-import qlearning
+import gym
+import deepq
+import asyn_deepq
 import tensorflow as tf
 from threading import Thread
 from train.parser import get_parser
@@ -10,26 +12,32 @@ from zmq.eventloop.ioloop import IOLoop
 def train_atari():
     flags = get_parser()
 
+    def make_env():
+        env = gym.make(flags.game_name)
+        return env
+
     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
     os.environ["CUDA_VISIBLE_DEVICES"] = flags.used_gpu
 
     tf.reset_default_graph()
     tf.Variable(0, name='global_step', trainable=False)
-    optimizer = tf.train.AdamOptimizer(flags.learning_rate)
-    q_estimator = qlearning.DistributionEstimator(
+    q_estimator = deepq.DistributionEstimator(
         action_n=flags.action_n,
-        optimizer=optimizer,
         vmin=flags.vmin,
         vmax=flags.vmax,
         N=flags.N,
         summary_dir=flags.summary_dir,
+        network=flags.network,
+        x_shape=[None, flags.observation_shape],
         scope='q')
 
-    target_estimator = qlearning.DistributionEstimator(
+    target_estimator = deepq.DistributionEstimator(
         action_n=flags.action_n,
         vmin=flags.vmin,
         vmax=flags.vmax,
         N=flags.N,
+        network=flags.network,
+        x_shape=[None, flags.observation_shape],
         scope='target_q')
 
     policy = EpsilonGreedy(
@@ -43,7 +51,7 @@ def train_atari():
     with tf.Session(config=config) as sess:
         sess.run(tf.global_variables_initializer())
 
-        estimator_update_func = qlearning.DistributionDQNUpdate(
+        estimator_update_func = deepq.DistributionDQNUpdate(
             flag='double',
             vmin=flags.vmin,
             vmax=flags.vmax,
@@ -58,17 +66,17 @@ def train_atari():
 
         for i in range(flags.num_worker):
             w = Thread(
-                target=qlearning.estimator_worker,
+                target=asyn_deepq.estimator_worker,
                 args=(flags.url_worker, i, sess, q_estimator, policy))
             w.daemon = True
             w.start()
 
         for i in range(flags.num_agent):
-            c = qlearning.Agent(flags.game_name, flags.url_client, i)
+            c = asyn_deepq.Agent(make_env, flags.url_client, i)
             c.daemon = True
             c.start()
 
-        qlearning.OffMaster(
+        asyn_deepq.OffMaster(
             init_memory_size=flags.init_memory_size,
             memory_size=flags.memory_size,
             estimator_update_every=flags.num_agent * 20,
