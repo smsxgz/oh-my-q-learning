@@ -38,7 +38,7 @@ class DistributionEstimator(Estimator):
 
             # self.optimizer = tf.train.RMSPropOptimizer(0.00025, 0.99, 0.0,
             #                                            1e-6)
-            self.optimizer = tf.train.AdamOptimizer(1e-4)
+            self.optimizer = tf.train.AdamOptimizer(1e-3)
 
             self.train_op = self.optimizer.minimize(
                 self.loss, global_step=tf.contrib.framework.get_global_step())
