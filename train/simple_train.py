@@ -20,8 +20,10 @@ def train_atari():
 
     tf.reset_default_graph()
     tf.Variable(0, name='global_step', trainable=False)
+    optimizer = tf.train.AdamOptimizer(flags.learning_rate)
     q_estimator = qlearning.DistributionEstimator(
         action_n=flags.action_n,
+        optimizer=optimizer,
         vmin=flags.vmin,
         vmax=flags.vmax,
         N=flags.N,
