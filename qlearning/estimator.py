@@ -65,7 +65,8 @@ class Estimator(object):
         self._build_model()
 
     @staticmethod
-    def _network(X_pl):
+    def _network(x_shape):
+        X_pl = tf.placeholder(shape=x_shape, dtype=tf.uint8, name="X")
         x = tf.cast(X_pl, tf.float32) / 255.0
         conv1 = tf.contrib.layers.conv2d(x, 32, 8, 4, activation_fn=tf.nn.relu)
         conv2 = tf.contrib.layers.conv2d(
@@ -77,19 +78,17 @@ class Estimator(object):
         flattened = tf.contrib.layers.flatten(conv3)
         fc = tf.contrib.layers.fully_connected(flattened, 512)
 
-        return fc
+        return X_pl, fc
 
     def _build_model(self):
         """Builds the Tensorflow graph."""
         with tf.variable_scope(self.scope):
-            self.X_pl = tf.placeholder(
-                shape=self.x_shape, dtype=tf.uint8, name="X")
             self.actions_pl = tf.placeholder(
                 shape=[None], dtype=tf.int32, name="actions")
             self.y_pl = tf.placeholder(
                 shape=[None], dtype=tf.float32, name="y")
 
-            fc = self.network(self.X_pl)
+            self.X_pl, fc = self.network(self.x_shape)
 
             batch_size = tf.shape(self.X_pl)[0]
             self.predictions = tf.contrib.layers.fully_connected(

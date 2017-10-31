@@ -12,14 +12,12 @@ class DistributionEstimator(Estimator):
     def _build_model(self):
         """Builds the Tensorflow graph."""
         with tf.variable_scope(self.scope):
-            self.X_pl = tf.placeholder(
-                shape=self.x_shape, dtype=tf.uint8, name="X")
             self.actions_pl = tf.placeholder(
                 shape=[None], dtype=tf.int32, name="actions")
             self.y_pl = tf.placeholder(
                 shape=[None, self.N], dtype=tf.float32, name="y")
 
-            fc = self.network(self.X_pl)
+            self.X_pl, fc = self.network(self.x_shape)
 
             batch_size = tf.shape(self.X_pl)[0]
             logits = tf.contrib.layers.fully_connected(
