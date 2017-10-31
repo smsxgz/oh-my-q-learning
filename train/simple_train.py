@@ -27,7 +27,7 @@ def train_atari():
         N=flags.N,
         summary_dir=flags.summary_dir,
         network=flags.network,
-        x_shape=[None, flags.observation_shape],
+        x_shape=[None, flags.observation_n],
         scope='q')
 
     target_estimator = qlearning.DistributionEstimator(
@@ -36,7 +36,7 @@ def train_atari():
         vmax=flags.vmax,
         N=flags.N,
         network=flags.network,
-        x_shape=[None, flags.observation_shape],
+        x_shape=[None, flags.observation_n],
         scope='target_q')
 
     policy = EpsilonGreedy(
