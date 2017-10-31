@@ -10,7 +10,7 @@ def str_reward(rewards, k):
     output += '+  {}\n'.format(rewards[-1])
     output += '+  recent {}:\n'.format(k)
     output += '+  max: {}, min: {}, mean: {:.3f}\n'.format(
-        max(rewards[-k:]), min(rewards), np.mean(rewards[-k:]))
+        max(rewards[-k:]), min(rewards[-k:]), np.mean(rewards[-k:]))
     output += '+  total:\n'
     output += '+  max: {}, mean: {:.3f}\n'.format(
         max(rewards), np.mean(rewards))
