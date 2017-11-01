@@ -1,5 +1,4 @@
 import os
-import gym
 import argparse
 import train as FLAGS
 

@@ -57,7 +57,7 @@ class Framestack(object):
     def step(self, a):
         obs, reward, done = self.env.step(a)
         self.obs.append(obs)
-        return np.concatenate(self.obs, axis=2), reward, done
+        return np.concatenate(self.obs, axis=2), reward, done, None
 
 
 def wrapper_env(game_name, skip=4, stack=4):
