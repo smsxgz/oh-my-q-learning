@@ -48,7 +48,7 @@ class Agent(Process):
                     str_reward(self.rewards_stats, 50)
                 ]))
                 if len(self.rewards_stats) % 100 == 0:
-                    f = open('./tmp/' + str(self.env.spec)[8:-4] + '/' +
+                    f = open('./tmp/' + str(self.env.spec)[8:-4] + '-' +
                              self.identity.decode('utf-8') + '.pkl', 'wb')
                     pickle.dump(self.rewards_stats, f)
                     f.close()
