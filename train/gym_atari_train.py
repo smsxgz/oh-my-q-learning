@@ -10,7 +10,7 @@ from zmq.eventloop.ioloop import IOLoop
 from lib.gym_atari_wrapper import wrapper_env
 
 
-def train_atari():
+def main():
     flags = get_parser()
 
     def make_env():
@@ -71,7 +71,7 @@ def train_atari():
             w.start()
 
         for i in range(flags.num_agent):
-            c = qlearning.Agent(flags.game_name, flags.url_client, i)
+            c = qlearning.Agent(make_env, flags.url_client, i)
             c.daemon = True
             c.start()
 
@@ -88,4 +88,4 @@ def train_atari():
 
 
 if __name__ == '__main__':
-    train_atari()
+    main()
