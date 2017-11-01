@@ -49,7 +49,7 @@ def main():
     with tf.Session(config=config) as sess:
         sess.run(tf.global_variables_initializer())
 
-        estimator_update_func = qlearning.DoublenDQNUpdate(
+        estimator_update_func = qlearning.DoubleDQNUpdate(
             sess=sess,
             checkpoint_dir=flags.path + '/checkpoints/',
             q_estimator=q_estimator,
