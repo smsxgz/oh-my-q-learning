@@ -76,7 +76,8 @@ def main():
             w.start()
 
         for i in range(flags.num_agent):
-            c = qlearning.Agent(make_env, flags.url_client, i)
+            c = qlearning.Agent(make_env, flags.url_client, i,
+                                flags.save_rewards_every)
             c.daemon = True
             c.start()
 

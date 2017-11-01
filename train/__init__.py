@@ -16,6 +16,7 @@ epsilon_decay_steps = 5000000
 update_estimator_every = num_agent * 4
 update_target_estimator_every = 1000
 save_model_every = 100
+save_rewards_every = 50
 
 init_memory_size = 80000
 memory_size = 1000000

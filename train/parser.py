@@ -31,6 +31,8 @@ def get_parser():
         default=FLAGS.update_target_estimator_every)
     parser.add_argument(
         '--save_model_every', type=int, default=FLAGS.save_model_every)
+    parser.add_argument(
+        '--save_rewards_every', type=int, default=FLAGS.save_rewards_every)
 
     # for memory buffer
     parser.add_argument(
