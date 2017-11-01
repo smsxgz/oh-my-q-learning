@@ -5,13 +5,13 @@ path = 'test'
 used_gpu = '0'
 num_agent = 8
 num_worker = 4
-batch_size = 32
+batch_size = 256
 discount_factor = 0.99
 learning_rate = 6.25e-5
 
-epsilon_start = 1.0
-epsilon_end = 0.1
-epsilon_decay_steps = 500000
+epsilon_start = 0.1
+epsilon_end = 0.01
+epsilon_decay_steps = 5000000
 
 update_estimator_every = num_agent * 4
 update_target_estimator_every = 1000
