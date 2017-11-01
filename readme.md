@@ -19,6 +19,7 @@ Here is my implementation of the Q-learning algorithms by tensorflow.
 
 ----
 My thanks for [Denny Britz](https://github.com/dennybritz/reinforcement-learning) and Min RK.
+
 lib/atari_wrapper.py is from [baselines](https://github.com/openai/baselines/blob/master/baselines/common/atari_wrappers.py).
 
 ----
