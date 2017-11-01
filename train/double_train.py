@@ -24,22 +24,16 @@ def main():
     tf.reset_default_graph()
     tf.Variable(0, name='global_step', trainable=False)
     optimizer = tf.train.AdamOptimizer(flags.learning_rate)
-    q_estimator = qlearning.DistributionEstimator(
+    q_estimator = qlearning.Estimator(
         action_n=flags.action_n,
         optimizer=optimizer,
-        vmin=flags.vmin,
-        vmax=flags.vmax,
-        N=flags.N,
         summary_dir=flags.summary_dir,
         network=flags.network,
         x_shape=[None, flags.observation_n],
         scope='q')
 
-    target_estimator = qlearning.DistributionEstimator(
+    target_estimator = qlearning.Estimator(
         action_n=flags.action_n,
-        vmin=flags.vmin,
-        vmax=flags.vmax,
-        N=flags.N,
         network=flags.network,
         x_shape=[None, flags.observation_n],
         scope='target_q')
@@ -55,7 +49,7 @@ def main():
     with tf.Session(config=config) as sess:
         sess.run(tf.global_variables_initializer())
 
-        estimator_update_func = qlearning.DistributionDQNUpdate(
+        estimator_update_func = qlearning.DoublenDQNUpdate(
             flag='double',
             vmin=flags.vmin,
             vmax=flags.vmax,
