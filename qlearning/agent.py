@@ -50,7 +50,7 @@ class Agent(Process):
                 ]))
                 if len(self.rewards_stats) % self.save_rewards_every == 0:
                     f = open('./tmp/' + str(self.env.spec)[8:-4] + '-' +
-                             self.identity.decode('utf-8') + '.pkl', 'wb')
+                             self.identity.decode('utf-8')[-1] + '.pkl', 'wb')
                     pickle.dump(self.rewards_stats, f)
                     f.close()
                 episode_reward = 0
