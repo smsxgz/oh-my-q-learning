@@ -103,19 +103,19 @@ class OnMaster(Master):
 class OffMaster(Master):
     """For memory buffer learning."""
 
-    def __init__(self, init_memory_size, memory_size, estimator_update_every,
+    def __init__(self, init_memory_size, memory_size, update_estimator_every,
                  **kwargs):
         super(OffMaster, self).__init__(**kwargs)
         self.init_memory_size = init_memory_size
         self.memory = deque(maxlen=memory_size)
-        self.estimator_update_every = estimator_update_every
+        self.update_estimator_every = update_estimator_every
         self.tot = 0
 
     def update(self, transition):
         self.memory.append(transition)
         self.tot += 1
         if len(self.memory) > self.init_memory_size and \
-                self.tot % self.estimator_update_every == 0:
+                self.tot % self.update_estimator_every == 0:
             samples = random.sample(self.memory, self.batch_size)
             samples = map(np.array, zip(*samples))
             self.estimator_update(*samples)

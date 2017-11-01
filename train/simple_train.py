@@ -12,6 +12,7 @@ from zmq.eventloop.ioloop import IOLoop
 
 def train_atari():
     flags = get_parser()
+    flags.update_estimator_every = 1
 
     def make_env():
         env = gym.make(flags.game_name)
@@ -82,7 +83,7 @@ def train_atari():
         qlearning.OffMaster(
             init_memory_size=flags.init_memory_size,
             memory_size=flags.memory_size,
-            estimator_update_every=1,
+            update_estimator_every=flags.update_estimator_every,
             url_worker=flags.url_worker,
             url_client=flags.url_client,
             batch_size=flags.batch_size,

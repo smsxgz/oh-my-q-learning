@@ -34,6 +34,10 @@ def get_parser():
 
     # for memory buffer
     parser.add_argument(
+        '--update_estimator_every',
+        type=int,
+        default=FLAGS.update_estimator_every)
+    parser.add_argument(
         '--init_memory_size', type=int, default=FLAGS.init_memory_size)
     parser.add_argument('--memory_size', type=int, default=FLAGS.memory_size)
 
@@ -55,7 +59,7 @@ def get_parser():
     env = gym.make(flags.game_name)
     flags.action_n = env.action_space.n
 
-    # We need observation shape for simple games and mujoco
+    # We need observation shape for simple games
     flags.observation_n = env.observation_space.shape[0]
     flags.network = FLAGS.network_struct(flags.observation_n, flags.action_n)
 

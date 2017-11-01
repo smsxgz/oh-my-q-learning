@@ -13,6 +13,7 @@ epsilon_start = 0.5
 epsilon_end = 0.05
 epsilon_decay_steps = 500000
 
+update_estimator_every = num_agent * 20
 update_target_estimator_every = 1000
 save_model_every = 100
 
@@ -24,7 +25,7 @@ vmax = 10.0
 N = 51
 
 
-# Network function for some simple games and mujoco
+# Network function for some simple games
 def network_struct(state_n, action_n):
     def network(x_shape):
         X_pl = tf.placeholder(shape=x_shape, dtype=tf.float32, name="X")
