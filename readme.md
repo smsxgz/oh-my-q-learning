@@ -40,3 +40,4 @@ TODO:
 1. ALE wrapper.
 2. Dueling network.
 3. Combine Dueling network and distributonal DQN like Rainbow.
+4. More experiments.

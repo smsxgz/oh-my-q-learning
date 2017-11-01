@@ -7,10 +7,15 @@ from threading import Thread
 from train.parser import get_parser
 from lib.policy import EpsilonGreedy
 from zmq.eventloop.ioloop import IOLoop
+from lib.gym_atari_wrapper import wrapper_env
 
 
 def train_atari():
     flags = get_parser()
+
+    def make_env():
+        env = wrapper_env(flags.game_name)
+        return env
 
     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
     os.environ["CUDA_VISIBLE_DEVICES"] = flags.used_gpu

@@ -10,7 +10,7 @@ from lib.policy import EpsilonGreedy
 from zmq.eventloop.ioloop import IOLoop
 
 
-def train_atari():
+def main():
     flags = get_parser()
     flags.update_estimator_every = 1
 
@@ -93,4 +93,4 @@ def train_atari():
 
 
 if __name__ == '__main__':
-    train_atari()
+    main()

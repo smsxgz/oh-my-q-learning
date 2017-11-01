@@ -31,7 +31,7 @@ class Update(object):
 
         latest_checkpoint = tf.train.latest_checkpoint(checkpoint_dir)
         if latest_checkpoint:
-            print("Loading model checkpoint {}...\n".format(latest_checkpoint))
+            print("Loading model checkpoint {}...".format(latest_checkpoint))
             try:
                 self.saver.restore(sess, latest_checkpoint)
             except:
