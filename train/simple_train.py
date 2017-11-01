@@ -14,6 +14,12 @@ def main():
     flags = get_parser()
     flags.update_estimator_every = 1
 
+    env = gym.make(flags.game_name)
+    action_n = env.action_space.n
+    observation_n = env.observation_space.shape[0]
+    network = flags.network_struct(observation_n, action_n)
+    env.close()
+
     def make_env():
         env = gym.make(flags.game_name)
         return env
@@ -25,23 +31,23 @@ def main():
     tf.Variable(0, name='global_step', trainable=False)
     optimizer = tf.train.AdamOptimizer(flags.learning_rate)
     q_estimator = qlearning.DistributionEstimator(
-        action_n=flags.action_n,
+        action_n=action_n,
         optimizer=optimizer,
         vmin=flags.vmin,
         vmax=flags.vmax,
         N=flags.N,
         summary_dir=flags.summary_dir,
-        network=flags.network,
-        x_shape=[None, flags.observation_n],
+        network=network,
+        x_shape=[None, observation_n],
         scope='q')
 
     target_estimator = qlearning.DistributionEstimator(
-        action_n=flags.action_n,
+        action_n=action_n,
         vmin=flags.vmin,
         vmax=flags.vmax,
         N=flags.N,
-        network=flags.network,
-        x_shape=[None, flags.observation_n],
+        network=network,
+        x_shape=[None, observation_n],
         scope='target_q')
 
     policy = EpsilonGreedy(

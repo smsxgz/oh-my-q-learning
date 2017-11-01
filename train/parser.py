@@ -58,12 +58,6 @@ def get_parser():
     flags.url_client = 'ipc://./tmp/{}-frontend.ipc'.format(
         flags.game_name[:-3])
 
-    env = gym.make(flags.game_name)
-    flags.action_n = env.action_space.n
+    flags.network_struct = FLAGS.network_struct
 
-    # We need observation shape for simple games
-    flags.observation_n = env.observation_space.shape[0]
-    flags.network = FLAGS.network_struct(flags.observation_n, flags.action_n)
-
-    env.close()
     return flags

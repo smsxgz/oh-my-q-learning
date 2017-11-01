@@ -1,4 +1,5 @@
 import os
+import gym
 import sys
 sys.path.insert(0, os.getcwd())
 import qlearning
@@ -13,6 +14,10 @@ from lib.gym_atari_wrapper import wrapper_env
 def main():
     flags = get_parser()
 
+    env = gym.make(flags.game_name)
+    action_n = env.action_space.n
+    env.close()
+
     def make_env():
         env = wrapper_env(flags.game_name)
         return env
@@ -24,7 +29,7 @@ def main():
     tf.Variable(0, name='global_step', trainable=False)
     optimizer = tf.train.AdamOptimizer(flags.learning_rate)
     q_estimator = qlearning.DistributionEstimator(
-        action_n=flags.action_n,
+        action_n=action_n,
         optimizer=optimizer,
         vmin=flags.vmin,
         vmax=flags.vmax,
@@ -33,7 +38,7 @@ def main():
         scope='q')
 
     target_estimator = qlearning.DistributionEstimator(
-        action_n=flags.action_n,
+        action_n=action_n,
         vmin=flags.vmin,
         vmax=flags.vmax,
         N=flags.N,

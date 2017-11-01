@@ -8,10 +8,16 @@ from train.parser import get_parser
 from lib.policy import EpsilonGreedy
 from zmq.eventloop.ioloop import IOLoop
 from lib.ale_wrapper import wrapper_env
+from ale_python_interface import ALEInterface
 
 
 def main():
     flags = get_parser()
+
+    env = ALEInterface()
+    name = './games/' + flags.game_name + '.bin'
+    env.loadROM(name.encode('utf-8'))
+    action_n = len(env.getMinimalActionSet())
 
     def make_env():
         env = wrapper_env(flags.game_name)
@@ -24,7 +30,7 @@ def main():
     tf.Variable(0, name='global_step', trainable=False)
     optimizer = tf.train.AdamOptimizer(flags.learning_rate)
     q_estimator = qlearning.DistributionEstimator(
-        action_n=flags.action_n,
+        action_n=action_n,
         optimizer=optimizer,
         vmin=flags.vmin,
         vmax=flags.vmax,
@@ -33,7 +39,7 @@ def main():
         scope='q')
 
     target_estimator = qlearning.DistributionEstimator(
-        action_n=flags.action_n,
+        action_n=action_n,
         vmin=flags.vmin,
         vmax=flags.vmax,
         N=flags.N,
