@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 from collections import deque
+from ale_python_interface import ALEInterface
 
 
 class Wrapper(object):
@@ -59,8 +60,10 @@ class Framestack(object):
         return np.concatenate(self.obs, axis=2), reward, done
 
 
-def wrap_env(env, skip=4, stack=None):
+def wrapper_env(game_name, skip=4, stack=4):
+    env = ALEInterface()
+    name = './games/' + game_name + '.bin'
+    env.loadROM(name.encode('utf-8'))
     env = Wrapper(env, skip=skip)
-    if stack:
-        env = Framestack(env, stack)
+    env = Framestack(env, stack)
     return env

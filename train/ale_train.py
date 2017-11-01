@@ -7,14 +7,14 @@ from threading import Thread
 from train.parser import get_parser
 from lib.policy import EpsilonGreedy
 from zmq.eventloop.ioloop import IOLoop
-from lib.ale_wrapper import wrap_env
+from lib.ale_wrapper import wrapper_env
 
 
 def main():
     flags = get_parser()
 
     def make_env():
-        env = wrap_env(flags.game_name)
+        env = wrapper_env(flags.game_name)
         return env
 
     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
