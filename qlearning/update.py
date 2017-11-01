@@ -2,6 +2,7 @@
     Manage q-estimator and target_estimator,
     especially for updating the q-estimator.
 """
+import sys
 import numpy as np
 import tensorflow as tf
 from qlearning.estimator import copy_model_parameters
@@ -39,7 +40,8 @@ class Update(object):
     def __call__(self, *args):
         loss = self._update(*args)
         self.tot += 1
-        print('{}th update, loss: {}'.format(self.tot, loss))
+        print('\r{}th update, loss: {}'.format(self.tot, loss), end='')
+        sys.stdout.flush()
 
         if self.tot % self.update_target_estimator_every == 0:
             copy_model_parameters(self.sess, self.q_estimator,
