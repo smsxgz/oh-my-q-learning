@@ -55,11 +55,19 @@ def main():
     with tf.Session(config=config) as sess:
         sess.run(tf.global_variables_initializer())
 
-        estimator_update_func = qlearning.DistributionDQNUpdate(
-            flag='double',
-            vmin=flags.vmin,
-            vmax=flags.vmax,
-            N=flags.N,
+        # estimator_update_func = qlearning.DistributionDQNUpdate(
+        #     flag='double',
+        #     vmin=flags.vmin,
+        #     vmax=flags.vmax,
+        #     N=flags.N,
+        #     sess=sess,
+        #     checkpoint_dir=flags.path + '/checkpoints/',
+        #     q_estimator=q_estimator,
+        #     target_estimator=target_estimator,
+        #     discount_factor=flags.discount_factor,
+        #     update_target_estimator_every=flags.update_target_estimator_every,
+        #     save_model_every=flags.save_model_every)
+        estimator_update_func = qlearning.DoubleDQNUpdate(
             sess=sess,
             checkpoint_dir=flags.path + '/checkpoints/',
             q_estimator=q_estimator,
