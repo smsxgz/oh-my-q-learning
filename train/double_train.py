@@ -50,10 +50,6 @@ def main():
         sess.run(tf.global_variables_initializer())
 
         estimator_update_func = qlearning.DoublenDQNUpdate(
-            flag='double',
-            vmin=flags.vmin,
-            vmax=flags.vmax,
-            N=flags.N,
             sess=sess,
             checkpoint_dir=flags.path + '/checkpoints/',
             q_estimator=q_estimator,
