@@ -12,7 +12,6 @@ from zmq.eventloop.ioloop import IOLoop
 
 def main():
     flags = get_parser()
-    flags.update_estimator_every = 1
 
     def make_env():
         env = gym.make(flags.game_name)
