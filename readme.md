@@ -14,7 +14,7 @@ Here is my implementation of the Q-learning algorithms by tensorflow.
 * DQN
 * Double DQN
 * [Distributional DQN](https://arxiv.org/abs/1707.06887)
-* [Dueling Network](https://arxiv.org/pdf/1511.06581)
+* [Dueling Network](https://arxiv.org/pdf/151-[]06581)
 * Combine Dueling network and distributonal DQN like [Rainbow](https://arxiv.org/pdf/1710.02298)
 
 ----
@@ -46,6 +46,8 @@ python train/ale_train.py -g beam_rider -p ale
 
 ----
 TODO:
-1. Dueling network.
-1. Combine Dueling network and distributonal DQN like Rainbow.
-1. More experiments.
+- [ ] 更异步的系统, Agent往另一个端口发送memory, 而不是由Master来收集(事实上只要在严格要求online的时候需要由Master来控制memory).
+- [ ] SuperAgent, 管理m个子环境, 每个子环境放在线程里, 以期用满100%的CPU.
+- [ ] More experiments.
+- [ ] Dueling network.
+- [ ] Combine Dueling network and distributonal DQN like Rainbow.
