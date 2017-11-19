@@ -14,7 +14,7 @@ class Agent(Thread):
         self.url = url
         self.memory_url = memory_url
 
-        self.allowed_actions = list(self.env.action_n)
+        self.allowed_actions = list(range(self.env.action_n))
 
     def run(self):
         context = zmq.Context()
