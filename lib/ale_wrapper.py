@@ -5,7 +5,7 @@ from ale_python_interface import ALEInterface
 
 
 class Wrapper(object):
-    skip_skip_obs_buffer = deque(maxlen=2)
+    skip_obs_buffer = deque(maxlen=2)
     lives = 0
     real_done = True
 
