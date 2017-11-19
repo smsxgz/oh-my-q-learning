@@ -54,7 +54,7 @@ if __name__ == '__main__':
         w.start()
 
     for i in range(1):
-        c = Agent(4, make_env, master_url, memory_url, i)
+        c = Agent(1, make_env, master_url, memory_url, i)
         c.start()
 
     Thread(target=memory, args=(memory_url, )).start()

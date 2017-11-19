@@ -16,6 +16,7 @@ class Agent(Thread):
         self.memory_url = memory_url
 
         self.allowed_actions = list(range(self.env.action_n))
+        print(self.env.action_n)
 
     def run(self):
         context = zmq.Context()
