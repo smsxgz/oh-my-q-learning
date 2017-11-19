@@ -16,7 +16,6 @@ class Agent(Thread):
         self.memory_url = memory_url
 
         self.allowed_actions = list(range(self.env.action_n))
-        print(self.env.action_n)
 
     def run(self):
         context = zmq.Context()
@@ -33,7 +32,9 @@ class Agent(Thread):
             action = msgpack.loads(socket.recv())
 
             # Do nothing, just assert noisily
-            assert action in self.allowed_actions
+            if action not in self.allowed_actions:
+                from IPython import embed
+                embed()
 
             next_state, reward, done, _ = self.env.step()
             memory.send(
