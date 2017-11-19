@@ -44,13 +44,13 @@ if __name__ == '__main__':
     master_url = 'ipc://./tmp/Master.ipc'
     worker_url = 'ipc://./tmp/Worker.ipc'
     memory_url = 'ipc://./tmp/Memory.ipc'
-    for i in range(4):
+    for i in range(1):
         w = Thread(target=random_worker, args=(worker_url, i, 9))
         w.daemon = True
         w.start()
 
-    for i in range(4):
-        c = Agent(8, make_env, master_url, memory_url, i)
+    for i in range(1):
+        c = Agent(4, make_env, master_url, memory_url, i)
         c.start()
 
     Thread(target=memory, args=(memory_url, )).start()

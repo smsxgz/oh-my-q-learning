@@ -77,7 +77,7 @@ class SuperAgent(Process):
     def run(self):
         self.context = zmq.Context()
         self.agent_socket = self.context.socket(zmq.ROUTER)
-        self.agent_socket.bind(self.agent_url)
+        self.agent_socket.bind(self.url)
 
         master_socket = self.context.socket(zmq.REQ)
         master_socket.identity = self.identity.encode('utf-8')
