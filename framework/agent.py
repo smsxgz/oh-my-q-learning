@@ -1,5 +1,6 @@
 import zmq
 import msgpack
+import numpy as np
 import msgpack_numpy
 from threading import Thread
 from multiprocessing import Process
@@ -68,7 +69,7 @@ class SuperAgent(Process):
             addr, empty, msg = self.agent_socket.recv_multipart()
             addrs.append(addr)
             states.append(msgpack.loads(msg))
-        return states, addrs
+        return np.array(states), addrs
 
     def agent_send(self, actions, addrs):
         for action, addr in zip(actions, addrs):
