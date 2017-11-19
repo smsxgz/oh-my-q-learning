@@ -51,8 +51,7 @@ class SuperAgent(Process):
         self.num_agents = num_agents
         self.identity = 'SuperAgent-{:d}'.format(i)
         self.master_url = master_url
-        self.url = 'ipc://./tmp/{}-superagent-{:d}'.format(
-            self.env.game_name, i)
+        self.url = master_url + '-superagent-{:d}'.format(i)
 
         # Start agents
         agents = [
