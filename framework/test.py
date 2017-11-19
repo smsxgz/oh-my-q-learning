@@ -16,11 +16,15 @@ def random_worker(url, i, action_n):
     socket = context.socket(zmq.REQ)
     identity = 'Worker-{:d}'.format(i)
     socket.identity = identity.encode('utf-8')
-    socket.connet(url)
+    socket.connect(url)
 
     socket.send(b'READY')
+    tot = 0
     while True:
         address, empty, request = socket.recv_multipart()
+        tot += 1
+        if tot % 100 == 0:
+            print(identity + ' get {} messages.')
         actions = np.random.randint(
             0, action_n, size=msgpack.loads(request).shape[0])
         socket.send_multipart([address, b'', msgpack.dumps(actions)])

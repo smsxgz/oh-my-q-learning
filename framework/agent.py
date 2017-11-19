@@ -39,6 +39,7 @@ class Agent(Thread):
                                next_state, done)))
             if done:
                 state = self.env.reset()
+                print(self.identity + ' done!')
             else:
                 state = next_state
 
@@ -64,7 +65,7 @@ class SuperAgent(Process):
         addrs = []
         states = []
         for _ in range(self.num_agents):
-            addr, empty, msg = self.agent_socket.recv()
+            addr, empty, msg = self.agent_socket.recv_multipart()
             addrs.append(addr)
             states.append(msgpack.loads(msg))
         return states, addrs
@@ -81,7 +82,7 @@ class SuperAgent(Process):
 
         master_socket = self.context.socket(zmq.REQ)
         master_socket.identity = self.identity.encode('utf-8')
-        master_socket.connet(self.master_url)
+        master_socket.connect(self.master_url)
 
         while True:
             states, addrs = self.agent_recv()
