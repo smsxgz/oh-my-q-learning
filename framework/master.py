@@ -16,8 +16,7 @@ class Master(object):
         But I would like to call it Master!!!
     """
 
-    def __init__(self, url_worker, url_client, batch_size,
-                 estimator_update_callable):
+    def __init__(self, url_worker, url_client):
 
         context = zmq.Context()
         frontend = context.socket(zmq.ROUTER)
@@ -28,14 +27,11 @@ class Master(object):
         self.available_workers = 0
         self.workers = []
 
-        self.batch_size = batch_size
-        self.estimator_update = estimator_update_callable
-
         self.backend = ZMQStream(backend)
         self.frontend = ZMQStream(frontend)
         self.backend.on_recv(self.handle_backend)
 
-        self.loop = IOLoop.instance()
+        # self.loop = IOLoop.instance()
 
     def handle_backend(self, msg):
         # Queue worker address for LRU routing
@@ -59,27 +55,13 @@ class Master(object):
         # Now get next client request, route to LRU worker
         # Client request is [address][empty][request]
         client_addr, empty, request = msg
-        request = msgpack.loads(request)
-        if request[0] == 'reset':
-            state = request[1]
-            msg = [b'', client_addr, b'', msgpack.dumps([state])]
-            self.worker_send(msg)
-        elif request[0] == 'step':
-            t = Transition(*request[1:])
-            self.update(t)
 
-            if t.done:
-                self.frontend.send_multipart([client_addr, b'', b'reset'])
-            else:
-                msg = [b'', client_addr, b'', msgpack.dumps([t.next_state])]
-                self.worker_send(msg)
-
-    def worker_send(self, msg):
         #  Dequeue and drop the next worker address
         self.available_workers -= 1
         worker_id = self.workers.pop(0)
 
-        self.backend.send_multipart([worker_id] + msg)
+        msg = [worker_id, b'', client_addr, b'', request]
+        self.backend.send_multipart(msg)
         if self.available_workers == 0:
             # stop receiving until workers become available again
             self.frontend.stop_on_recv()

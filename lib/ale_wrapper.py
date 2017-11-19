@@ -5,65 +5,69 @@ from ale_python_interface import ALEInterface
 
 
 class Wrapper(object):
-    def __init__(self, env, skip=4):
+    skip_skip_obs_buffer = deque(maxlen=2)
+    lives = 0
+    real_done = True
+
+    def __init__(self, env, game_name, skip=4, stack=4):
         self.env = env
+        self.game_name = game_name
         self.skip = skip
-        self.action = env.getMinimalActionSet()
-        self.obs_buffer = deque(maxlen=2)
+        self.stack = stack
+
+        self.obs_buffer = deque(maxlen=stack)
+        self.action_set = env.getMinimalActionSet()
+        self.action_n = len(self.action_set)
 
     def step(self, a):
         total_reward = 0.0
         done = None
-        action = self.action[a]
+        action = self.action_set[a]
         for _ in range(self.skip):
+            # Rewards
             r = self.env.act(action)
-            obs = Wrapper.process(self.env.getScreenGrayscale())
-            done = self.env.game_over()
             total_reward += r
-            self.obs_buffer.append(obs)
+
+            # Obs(state)
+            obs = Wrapper.process(self.env.getScreenGrayscale())
+            self.skip_obs_buffer.append(obs)
+
+            # Done
+            lives = self.env.lives()
+            done = lives < self.lives
+            self.lives = lives
+            self.real_done = self.env.game_over()
+
             if done:
                 break
-        max_frame = np.max(np.stack(self.obs_buffer), axis=0)
-        return max_frame, total_reward, done
+        max_frame = np.max(np.stack(self.skip_obs_buffer), axis=0)
+
+        self.obs_buffer.append(max_frame)
+        return np.concatenate(
+            self.obs_buffer, axis=2), total_reward, done, None
 
     def reset(self):
-        self.obs_buffer.clear()
-        self.env.reset_game()
-        obs = Wrapper.process(self.env.getScreenGrayscale())
-        self.obs_buffer.append(obs)
-        return obs
+        self.skip_obs_buffer.clear()
+        if self.real_done:
+            self.env.reset_game()
+            obs = Wrapper.process(self.env.getScreenGrayscale())
+            self.skip_obs_buffer.append(obs)
+        else:
+            obs, _, _ = self.step(0)
+
+        for _ in range(self.stack):
+            self.obs_buffer.append(obs)
+        return np.concatenate(self.obs_buffer, axis=2)
 
     @staticmethod
-    def process(obs):
-        obs = np.array(obs)
-        obs = cv2.resize(obs, (84, 110), interpolation=cv2.INTER_AREA)
-        obs = obs[18:102, :]
-        obs = np.reshape(obs, [84, 84, 1])
-        return obs
+    def process(frame):
+        frame = cv2.resize(frame, (84, 84), interpolation=cv2.INTER_AREA)
+        return frame[:, :, np.newaxis]
 
 
-class Framestack(object):
-    def __init__(self, env, k):
-        self.env = env
-        self.k = k
-        self.obs = deque(maxlen=k)
-
-    def reset(self):
-        obs = self.env.reset()
-        for _ in range(self.k):
-            self.obs.append(obs)
-        return np.concatenate(self.obs, axis=2)
-
-    def step(self, a):
-        obs, reward, done = self.env.step(a)
-        self.obs.append(obs)
-        return np.concatenate(self.obs, axis=2), reward, done, None
-
-
-def wrapper_env(game_name, skip=4, stack=4):
+def wrap_env(game_name, skip=4, stack=4):
     env = ALEInterface()
     name = './games/' + game_name + '.bin'
     env.loadROM(name.encode('utf-8'))
-    env = Wrapper(env, skip=skip)
-    env = Framestack(env, stack)
+    env = Wrapper(env, game_name, skip=skip, stack=4)
     return env
