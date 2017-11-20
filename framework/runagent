@@ -1,0 +1,4 @@
+for i in 1 2 3 4 5 6 7 8; 
+    do ipython framework/startagent.py &
+    done
+# ipython framework/startagent.py 

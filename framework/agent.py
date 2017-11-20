@@ -8,11 +8,11 @@ msgpack_numpy.patch()
 
 
 class Agent(Thread):
-    def __init__(self, make_env, identity, url, memory_url):
+    def __init__(self, make_env, identity, port, memory_url):
         super(Agent, self).__init__(daemon=True)
         self.env = make_env()
         self.identity = identity
-        self.url = url
+        self.url = 'tcp://127.0.0.1:{}'.format(port)
         self.memory_url = memory_url
 
         self.allowed_actions = list(range(self.env.action_n))
@@ -32,11 +32,9 @@ class Agent(Thread):
             action = msgpack.loads(socket.recv())
 
             # Do nothing, just assert noisily
-            if action not in self.allowed_actions:
-                from IPython import embed
-                embed()
+            assert action in self.allowed_actions
 
-            next_state, reward, done, _ = self.env.step()
+            next_state, reward, done, _ = self.env.step(action)
             memory.send(
                 msgpack.dumps((self.identity, state, action, reward,
                                next_state, done)))
@@ -47,19 +45,20 @@ class Agent(Thread):
                 state = next_state
 
 
-class SuperAgent(Process):
+class SuperAgent(object):
     """Control agents' threads."""
 
     def __init__(self, num_agents, make_env, master_url, memory_url, i):
-        super(SuperAgent, self).__init__(daemon=True)
+        # super(SuperAgent, self).__init__(daemon=True)
         self.num_agents = num_agents
         self.identity = 'SuperAgent-{:d}'.format(i)
         self.master_url = master_url
-        self.url = master_url + '-superagent-{:d}'.format(i)
+        port = np.random.randint(1, 10000)
+        self.url = 'tcp://*:{}'.format(port)
 
         # Start agents
         agents = [
-            Agent(make_env, self.identity + '-Agent-{:d}'.format(j), self.url,
+            Agent(make_env, self.identity + '-Agent-{:d}'.format(j), port,
                   memory_url) for j in range(num_agents)
         ]
         [a.start() for a in agents]
@@ -70,8 +69,15 @@ class SuperAgent(Process):
         for _ in range(self.num_agents):
             addr, empty, msg = self.agent_socket.recv_multipart()
             addrs.append(addr)
-            states.append(msgpack.loads(msg))
-        return np.array(states), addrs
+            state = msgpack.loads(msg)
+            assert state.shape == (84, 84, 4)
+            states.append(state)
+        try:
+            states = np.array(states)
+        except Exception:
+            from IPython import embed
+            embed()
+        return states, addrs
 
     def agent_send(self, actions, addrs):
         for action, addr in zip(actions, addrs):
@@ -90,5 +96,5 @@ class SuperAgent(Process):
         while True:
             states, addrs = self.agent_recv()
             master_socket.send(msgpack.dumps(states))
-            actions = msgpack.dumps(master_socket.recv())
+            actions = msgpack.loads(master_socket.recv())
             self.agent_send(actions, addrs)

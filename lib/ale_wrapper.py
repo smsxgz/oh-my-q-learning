@@ -5,10 +5,6 @@ from ale_python_interface import ALEInterface
 
 
 class Wrapper(object):
-    skip_obs_buffer = deque(maxlen=2)
-    lives = 0
-    real_done = True
-
     def __init__(self, env, game_name, skip=4, stack=4):
         self.env = env
         self.game_name = game_name
@@ -19,7 +15,11 @@ class Wrapper(object):
         self.action_set = env.getMinimalActionSet()
         self.action_n = len(self.action_set)
 
-    def step(self, a):
+        self.skip_obs_buffer = deque(maxlen=2)
+        self.lives = 0
+        self.real_done = True
+
+    def _step(self, a):
         total_reward = 0.0
         done = None
         action = self.action_set[a]
@@ -40,11 +40,18 @@ class Wrapper(object):
 
             if done:
                 break
-        max_frame = np.max(np.stack(self.skip_obs_buffer), axis=0)
 
-        self.obs_buffer.append(max_frame)
-        return np.concatenate(
-            self.obs_buffer, axis=2), total_reward, done, None
+        try:
+            max_frame = np.max(np.stack(self.skip_obs_buffer), axis=0)
+        except Exception:
+            print(self.skip_obs_buffer)
+            exit()
+        return max_frame, total_reward, done
+
+    def step(self, a):
+        state, reward, done = self._step(a)
+        self.obs_buffer.append(state)
+        return np.concatenate(self.obs_buffer, axis=2), reward, done, None
 
     def reset(self):
         self.skip_obs_buffer.clear()
@@ -53,7 +60,7 @@ class Wrapper(object):
             obs = Wrapper.process(self.env.getScreenGrayscale())
             self.skip_obs_buffer.append(obs)
         else:
-            obs, _, _ = self.step(0)
+            obs, _, _ = self._step(0)
 
         for _ in range(self.stack):
             self.obs_buffer.append(obs)
@@ -69,5 +76,5 @@ def wrap_env(game_name, skip=4, stack=4):
     env = ALEInterface()
     name = './games/' + game_name + '.bin'
     env.loadROM(name.encode('utf-8'))
-    env = Wrapper(env, game_name, skip=skip, stack=4)
+    env = Wrapper(env, game_name, skip=skip, stack=stack)
     return env
