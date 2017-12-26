@@ -3,13 +3,12 @@ import msgpack
 import numpy as np
 import msgpack_numpy
 from threading import Thread
-from multiprocessing import Process
 msgpack_numpy.patch()
 
 
-class Agent(Thread):
+class SubAgent(Thread):
     def __init__(self, make_env, identity, port, memory_url):
-        super(Agent, self).__init__(daemon=True)
+        super(SubAgent, self).__init__(daemon=True)
         self.env = make_env()
         self.identity = identity
         self.url = 'tcp://127.0.0.1:{}'.format(port)
@@ -45,7 +44,7 @@ class Agent(Thread):
                 state = next_state
 
 
-class SuperAgent(object):
+class Agent(object):
     """Control agents' threads."""
 
     def __init__(self, num_agents, make_env, master_url, memory_url, i):
@@ -58,8 +57,8 @@ class SuperAgent(object):
 
         # Start agents
         agents = [
-            Agent(make_env, self.identity + '-Agent-{:d}'.format(j), port,
-                  memory_url) for j in range(num_agents)
+            SubAgent(make_env, self.identity + '-Agent-{:d}'.format(j), port,
+                     memory_url) for j in range(num_agents)
         ]
         [a.start() for a in agents]
 
@@ -98,3 +97,22 @@ class SuperAgent(object):
             master_socket.send(msgpack.dumps(states))
             actions = msgpack.loads(master_socket.recv())
             self.agent_send(actions, addrs)
+
+
+def main():
+    from lib.ale_wrapper import wrap_env
+    import numpy as np
+
+    master_url = 'ipc://./tmp/Master.ipc'
+    memory_url = 'ipc://./tmp/Memory.ipc'
+
+    def make_env():
+        env = wrap_env('beam_rider')
+        return env
+
+    c = Agent(8, make_env, master_url, memory_url, np.random.randint(0, 100))
+    c.run()
+
+
+if __name__ == '__main__':
+    main()
