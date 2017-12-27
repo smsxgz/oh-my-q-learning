@@ -3,6 +3,7 @@ import msgpack
 import numpy as np
 import msgpack_numpy
 from threading import Thread
+from env import make_env
 msgpack_numpy.patch()
 
 
@@ -22,6 +23,7 @@ class SubAgent(Thread):
         socket.connect(self.url)
 
         # Reset env
+        game_reward = 0
         state = self.env.reset()
         socket.send(msgpack.dumps(state))
 
@@ -32,29 +34,33 @@ class SubAgent(Thread):
             assert action in self.allowed_actions
 
             next_state, reward, done, _ = self.env.step(action)
-
+            game_reward += reward
+            info = None
             if done:
-                print(self.identity + ' done!')
                 next_state = self.env.reset()
+                info = game_reward
+                game_reward = 0
 
-            socket.send(msgpack.dumps((next_state, reward, done)))
+            socket.send(msgpack.dumps((next_state, reward, info)))
 
 
 class Agent(object):
     """Control agents' threads."""
 
-    def __init__(self, num_agents, make_env, master_url, memory_url, i):
-        # super(SuperAgent, self).__init__(daemon=True)
+    def __init__(self, num_agents, make_env, game_name, master_url, i):
         self.num_agents = num_agents
         self.identity = 'SuperAgent-{:d}'.format(i)
         self.master_url = master_url
-        port = np.random.randint(1, 10000)
-        self.url = 'tcp://*:{}'.format(port)
+        self.url = 'ipc://./tmp/game_name/SuperAgent-{:d}.ipc'.format(i)
+
+        def get_env():
+            env = make_env(game_name)
+            return env
 
         # Start agents
         agents = [
-            SubAgent(make_env, self.identity + '-Agent-{:d}'.format(j), port,
-                     memory_url) for j in range(num_agents)
+            SubAgent(get_env, '{}-Agent-{:d}'.format(self.identity, j),
+                     self.url) for j in range(num_agents)
         ]
         [a.start() for a in agents]
 
@@ -96,17 +102,12 @@ class Agent(object):
 
 
 def main():
-    from lib.ale_wrapper import wrap_env
+
     import numpy as np
 
     master_url = 'ipc://./tmp/Master.ipc'
-    memory_url = 'ipc://./tmp/Memory.ipc'
 
-    def make_env():
-        env = wrap_env('beam_rider')
-        return env
-
-    c = Agent(8, make_env, master_url, memory_url, np.random.randint(0, 100))
+    c = Agent(8, make_env, master_url, np.random.randint(0, 100))
     c.run()
 
 
