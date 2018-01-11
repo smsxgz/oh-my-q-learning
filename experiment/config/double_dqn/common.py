@@ -9,9 +9,15 @@ assert path[-6:] == 'config'
 true_train_path = os.path.join(path[:-6], 'train_log', basename)
 train_path = os.path.join(cwd, 'train_log')
 
+if not os.path.exists(true_train_path):
+    os.makedirs(true_train_path)
+
 if not os.path.exists(train_path):
-    if not os.path.exists(true_train_path):
-        os.makedirs(true_train_path)
+    os.system('ln -s {} train_log'.format(true_train_path))
+elif os.path.realpath(train_path) != true_train_path:
+    os.system('rm train_log')
     os.system('ln -s {} train_log'.format(true_train_path))
 
 summary_path = os.path.join(train_path, 'summaries')
+if not os.path.exists(summary_path):
+    os.makedirs(summary_path)

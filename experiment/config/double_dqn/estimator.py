@@ -1,4 +1,3 @@
-import os
 import tensorflow as tf
 
 
@@ -39,44 +38,19 @@ class Estimator(object):
     """
 
     def __init__(self,
-                 action_n,
-                 summary_dir=None,
-                 x_shape=[None, 84, 84, 4],
+                 network,
+                 optimizer=None,
+                 summary_writer=None,
                  scope="estimator"):
         """
-        Args:
-            action_n:    size of action space
-            summary_dir: where to save summaries
-            network:     a function of building graph before the last layer
-            x_shape:     shape of X_placeholder, [?, 84, 84, 4] for image input
-            scope:       name of the varible scope
+        Notes:
+            network is callable,
+            receives nothing, returns X's placeholder and last layer of model.
         """
-        self.action_n = action_n
-        self.summary_dir = summary_dir
-        self.x_shape = x_shape
+        self.network = network
         self.scope = scope
-        if summary_dir:
-            summary_dir = summary_dir + self.scope
-            self.summary_writer = tf.summary.FileWriter(summary_dir)
-        else:
-            self.summary_writer = None
+        self.summary_writer = summary_writer
         self._build_model()
-
-    @staticmethod
-    def _network(x_shape):
-        X_pl = tf.placeholder(shape=x_shape, dtype=tf.uint8, name="X")
-        x = tf.cast(X_pl, tf.float32) / 255.0
-        conv1 = tf.contrib.layers.conv2d(x, 32, 8, 4, activation_fn=tf.nn.relu)
-        conv2 = tf.contrib.layers.conv2d(
-            conv1, 64, 4, 2, activation_fn=tf.nn.relu)
-        conv3 = tf.contrib.layers.conv2d(
-            conv2, 64, 3, 1, activation_fn=tf.nn.relu)
-
-        # Fully connected layers
-        flattened = tf.contrib.layers.flatten(conv3)
-        fc = tf.contrib.layers.fully_connected(flattened, 512)
-
-        return X_pl, fc
 
     def _build_model(self):
         """Builds the Tensorflow graph."""
@@ -86,11 +60,9 @@ class Estimator(object):
             self.y_pl = tf.placeholder(
                 shape=[None], dtype=tf.float32, name="y")
 
-            self.X_pl, fc = self.network(self.x_shape)
+            self.X_pl, self.predictions = self.network(self.x_shape)
 
             batch_size = tf.shape(self.X_pl)[0]
-            self.predictions = tf.contrib.layers.fully_connected(
-                fc, self.action_n, activation_fn=None)
 
             # Get the predictions for the chosen actions only
             gather_indices = tf.range(batch_size) * tf.shape(
