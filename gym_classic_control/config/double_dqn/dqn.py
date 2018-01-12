@@ -13,6 +13,12 @@ def dqn(sess,
     states = env.reset()
     while True:
         q_values = q_estimator.predict(sess, states)
+        actions = exploration_policy_fn(q_values, total_t)
+        next_states, rewards, dones, info = env.step(actions)
+
+        memory_buffer.extend(zip(states, actions, rewards, next_states, dones))
+
+        sample = memory_buffer.sample()
         # Add summaries to tensorboard
         episode_summary = tf.Summary()
         episode_summary.value.add(
