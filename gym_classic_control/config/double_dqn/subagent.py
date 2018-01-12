@@ -23,16 +23,25 @@ class SubAgent(object):
 
         # Reset env
         print('subagent {} start!'.format(self.identity))
-        game_reward = 0
-        state = self.env.reset()
-        socket.send(msgpack.dumps((state, self.action_n)))
+        socket.send(
+            msgpack.dumps(('ready', self.action_n,
+                           self.env.observation_space.shape)))
 
         while True:
-            action = msgpack.loads(socket.recv())
+            action = socket.recv()
+            if action == b'reset':
+                game_reward = 0
+                state = self.env.reset()
+                socket.send(msgpack.dumps(state))
+                continue
 
-            # Do nothing, just assert noisily
+            if action == b'close':
+                socket.close()
+                context.term()
+                break
+
+            action = msgpack.loads(action)
             assert action in self.allowed_actions
-
             next_state, reward, done, _ = self.env.step(action)
             game_reward += reward
             info = None
@@ -49,7 +58,7 @@ class SubAgent(object):
 @click.option('--identity')
 def main(game_name, identity):
     s = SubAgent(game_name, identity,
-                 'ipc://./tmp/{}/Agent.ipc'.format(game_name))
+                 'ipc://./.ipc/{}/Agent.ipc'.format(game_name))
     s.run()
 
 
