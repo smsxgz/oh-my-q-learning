@@ -2,19 +2,20 @@ import click
 import numpy as np
 import tensorflow as tf
 
+from dqn import dqn
+from agent import Agent
+import common as settings
 from util import Memory
 from util import EpsilonGreedy
-import common as settings
 from estimator import Estimator
 from estimator import Update
-from agent import Agent
 
 
 def get_network(state_n, action_n):
     def network():
         X = tf.placeholder(shape=[None, state_n], dtype=tf.float32, name="X")
         output = tf.contrib.layers.fully_connected(
-            X, round(np.sqrt(state_n * action_n)))
+            X, int(round(np.sqrt(state_n * action_n))))
         output = tf.contrib.layers.fully_connected(
             output, action_n, activation_fn=None)
         return X, output
@@ -25,7 +26,7 @@ def get_network(state_n, action_n):
 @click.command()
 @click.option('--game_name')
 def main(game_name):
-    env = Agent(32, game_name)
+    env = Agent(8, game_name)
 
     tf.reset_default_graph()
     tf.Variable(0, name='global_step', trainable=False)
@@ -52,6 +53,8 @@ def main(game_name):
         discount_factor=0.99,
         update_target_estimator_every=100,
         save_model_every=100)
+
+    dqn(sess, env, update_fn, q_estimator, memory, summary_writer, policy_fn)
 
 
 if __name__ == '__main__':

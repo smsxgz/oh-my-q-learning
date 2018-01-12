@@ -21,6 +21,7 @@ class Estimator(object):
         """
         self.network = network
         self.scope = scope
+        self.optimizer = optimizer
         self.summary_writer = summary_writer
         self._build_model()
 
@@ -32,7 +33,7 @@ class Estimator(object):
             self.y_pl = tf.placeholder(
                 shape=[None], dtype=tf.float32, name="y")
 
-            self.X_pl, self.predictions = self.network(self.x_shape)
+            self.X_pl, self.predictions = self.network()
 
             batch_size = tf.shape(self.X_pl)[0]
 
@@ -135,7 +136,7 @@ class Update(object):
                 print('Loading failed, we will Start from scratch!!')
 
     def __call__(self, *args):
-        loss = self._update(*args)
+        loss, global_step = self._update(*args)
         self.tot += 1
         print('\r{}th update, loss: {}'.format(self.tot, loss), end='')
         sys.stdout.flush()
@@ -148,6 +149,8 @@ class Update(object):
         if self.tot % self.save_model_every == 0:
             self.saver.save(self.sess, self.checkpoint_path + 'model')
             print("\nSave session.")
+
+        return global_step
 
     def _update(self, states_batch, action_batch, reward_batch,
                 next_states_batch, done_batch):

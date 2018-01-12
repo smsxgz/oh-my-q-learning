@@ -29,7 +29,7 @@ class EpsilonGreedy(object):
 
         batch_size = q_values.shape[0]
         best_actions = np.argmax(q_values, axis=1)
-        actions = np.random.randint(0, len(q_values), size=batch_size)
+        actions = np.random.randint(0, q_values.shape[1], size=batch_size)
         idx = np.random.uniform(size=batch_size) > epsilon
         actions[idx] = best_actions[idx]
         return actions
@@ -51,7 +51,8 @@ class Memory(object):
             self.append(t)
 
     def sample(self):
-        if len(self.mem) > self.init_size and self.tot % self.sample_every == 0:
+        if len(self.mem) > self.init_size and \
+                self.tot % self.sample_every == 0:
             samples = random.sample(self.mem, self.batch_size)
             self.tot += 1
             return map(np.array, zip(*samples))

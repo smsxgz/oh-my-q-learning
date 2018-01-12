@@ -29,14 +29,15 @@ class Agent(object):
         self.agent_socket.bind(url)
 
         self.addrs = OrderedDict()
-        self.action_n = self._prepare()
+        self.action_n, self.state_shape = self._prepare()
 
     def _prepare(self):
         for _ in range(self.num_agents):
             addr, empty, msg = self.agent_socket.recv_multipart()
             msg = msgpack.loads(msg)
             self.addrs[addr] = None
-            assert msg[0] == 'ready'
+            print(msg)
+            assert msg[0] in [b'ready', 'ready']
             action_n = msg[1]
             state_shape = msg[2]
         return action_n, state_shape
