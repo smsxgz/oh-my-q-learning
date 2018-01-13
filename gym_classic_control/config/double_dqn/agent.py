@@ -37,7 +37,7 @@ class Agent(object):
             msg = msgpack.loads(msg)
             self.addrs[addr] = None
             print(msg)
-            assert msg[0] in [b'ready', 'ready']
+            assert msg[0] == b'ready'
             action_n = msg[1]
             state_shape = msg[2]
         return action_n, state_shape

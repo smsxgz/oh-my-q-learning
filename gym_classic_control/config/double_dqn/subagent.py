@@ -24,7 +24,7 @@ class SubAgent(object):
         # Reset env
         print('subagent {} start!'.format(self.identity))
         socket.send(
-            msgpack.dumps(('ready', self.action_n,
+            msgpack.dumps((b'ready', self.action_n,
                            self.env.observation_space.shape)))
 
         while True:

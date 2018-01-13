@@ -34,7 +34,7 @@ def main(game_name):
     optimizer = tf.train.AdamOptimizer(1e-3)
 
     memory = Memory(500000, 50000, 64)
-    policy_fn = EpsilonGreedy(1.0, 0.1, 500000, summary_writer)
+    policy_fn = EpsilonGreedy(1.0, 0.1, 50000, summary_writer)
 
     network = get_network(env.state_shape[0], env.action_n)
     q_estimator = Estimator(network, optimizer, summary_writer, "q")
@@ -51,8 +51,8 @@ def main(game_name):
         q_estimator,
         target_estimator,
         discount_factor=0.99,
-        update_target_estimator_every=100,
-        save_model_every=100)
+        update_target_estimator_every=1000,
+        save_model_every=1000)
 
     dqn(sess, env, update_fn, q_estimator, memory, summary_writer, policy_fn)
 

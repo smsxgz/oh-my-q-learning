@@ -1,3 +1,4 @@
+import os
 import sys
 import numpy as np
 import tensorflow as tf
@@ -51,7 +52,7 @@ class Estimator(object):
             if self.optimizer:
                 self.train_op = self.optimizer.minimize(
                     self.loss,
-                    global_step=tf.contrib.framework.get_global_step())
+                    global_step=tf.train.get_global_step())
 
             if self.summary_writer:
                 self.summaries = tf.summary.merge([
@@ -69,7 +70,7 @@ class Estimator(object):
         feed_dict = {self.X_pl: s, self.y_pl: y, self.actions_pl: a}
         summaries, global_step, _, loss = sess.run([
             self.summaries,
-            tf.contrib.framework.get_global_step(), self.train_op, self.loss
+            tf.train.get_global_step(), self.train_op, self.loss
         ], feed_dict)
         if self.summary_writer:
             self.summary_writer.add_summary(summaries, global_step)
@@ -147,7 +148,7 @@ class Update(object):
             print("\nCopied model parameters to target network.")
 
         if self.tot % self.save_model_every == 0:
-            self.saver.save(self.sess, self.checkpoint_path + 'model')
+            self.saver.save(self.sess, os.path.join(self.checkpoint_path, 'model'))
             print("\nSave session.")
 
         return global_step
