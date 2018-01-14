@@ -20,7 +20,7 @@ def get_network(state_n, action_n):
     def network():
         X = tf.placeholder(shape=[None, state_n], dtype=tf.float32, name="X")
         output = tf.contrib.layers.fully_connected(
-            X, int(round(np.sqrt(state_n * action_n))))
+            X, 24)
         output = tf.contrib.layers.fully_connected(
             output, action_n, activation_fn=None)
         return X, output
