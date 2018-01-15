@@ -51,8 +51,7 @@ class Estimator(object):
 
             if self.optimizer:
                 self.train_op = self.optimizer.minimize(
-                    self.loss,
-                    global_step=tf.train.get_global_step())
+                    self.loss, global_step=tf.train.get_global_step())
 
             if self.summary_writer:
                 self.summaries = tf.summary.merge([
@@ -141,7 +140,7 @@ class Update(object):
     def __call__(self, *args):
         loss, global_step = self._update(*args)
         self.tot += 1
-        print('\r{}th update, loss: {}'.format(self.tot, loss), end='')
+        print('\r{}th update, loss: {}'.format(global_step, loss), end='')
         sys.stdout.flush()
 
         if self.tot % self.update_target_estimator_every == 0:
@@ -150,7 +149,9 @@ class Update(object):
             print("\nCopied model parameters to target network.")
 
         if self.tot % self.save_model_every == 0:
-            self.saver.save(self.sess, os.path.join(self.checkpoint_path, 'model'), global_step)
+            self.saver.save(self.sess,
+                            os.path.join(self.checkpoint_path, 'model'),
+                            global_step)
             print("\nSave session.")
 
         return global_step

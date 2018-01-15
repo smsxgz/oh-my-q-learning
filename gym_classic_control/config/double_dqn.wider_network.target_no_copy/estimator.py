@@ -128,7 +128,7 @@ class Update(object):
     def __call__(self, *args):
         loss, global_step = self._update(*args)
         self.tot += 1
-        print('\r{}th update, loss: {}'.format(self.tot, loss), end='')
+        print('\r{}th update, loss: {}'.format(global_step, loss), end='')
         sys.stdout.flush()
 
         update_target(self.sess, self.q_estimator, self.target_estimator,
