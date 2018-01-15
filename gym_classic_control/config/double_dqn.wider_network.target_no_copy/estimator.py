@@ -56,8 +56,8 @@ class Estimator(object):
             if self.summary_writer:
                 self.summaries = tf.summary.merge([
                     tf.summary.scalar("loss", self.loss),
-                    tf.summary.histogram("loss_hist", self.losses),
-                    tf.summary.histogram("q_values_hist", self.predictions),
+                    # tf.summary.histogram("loss_hist", self.losses),
+                    # tf.summary.histogram("q_values_hist", self.predictions),
                     tf.summary.scalar("max_q_value",
                                       tf.reduce_max(self.predictions)),
                     tf.summary.scalar("min_q_value",
