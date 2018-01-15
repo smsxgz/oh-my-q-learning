@@ -55,11 +55,13 @@ def dqn(sess,
                 # update
                 summaries, total_t, _, loss = estimator.update(
                     sess, states_batch, action_batch, targets_batch)
-                if total_t % update_target_every == 0:
-                    estimator.target_update(sess)
 
                 summary_writer.add_summary(summaries, total_t)
                 print('\r{}th update loss: {}'.format(total_t, loss), end='')
+                
+                if total_t % update_target_every == 0:
+                    estimator.target_update(sess)
+                    print('\ntarget update!')
 
                 if total_t % save_model_every == 0:
                     saver.save(sess,
