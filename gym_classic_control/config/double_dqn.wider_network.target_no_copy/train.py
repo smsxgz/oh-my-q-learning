@@ -27,7 +27,7 @@ def get_network(state_n, action_n):
 
 
 @click.command()
-@click.option('--game_name', prompt='game name: ')
+@click.option('--game_name', prompt='game name ')
 # @click.option('--')
 def main(game_name):
     env = Agent(64, game_name)
