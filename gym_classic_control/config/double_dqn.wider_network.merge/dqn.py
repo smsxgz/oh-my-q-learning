@@ -40,7 +40,7 @@ def dqn(sess,
                 states_batch, action_batch, reward_batch, \
                     next_states_batch, done_batch = sample
 
-                # compute target batch(y)
+                # compute target batch (y)
                 batch_size = states_batch.shape[0]
                 best_actions = np.argmax(
                     estimator.predict(sess, next_states_batch), axis=1)
