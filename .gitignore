@@ -4,3 +4,4 @@ experiment/*
 tmp/*.ipc
 tmp/*.pkl
 games/*
+*train_log*
