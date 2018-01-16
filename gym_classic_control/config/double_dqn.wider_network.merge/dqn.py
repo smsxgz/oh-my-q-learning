@@ -1,5 +1,4 @@
 import os
-import sys
 import numpy as np
 import tensorflow as tf
 
@@ -47,9 +46,9 @@ def dqn(sess,
 
                 q_values_next_target = estimator.target_predict(
                     sess, next_states_batch)
-                discount_factor = np.invert(done_batch).astype(
+                discount_factor_batch = np.invert(done_batch).astype(
                     np.float32) * discount_factor
-                targets_batch = reward_batch + discount_factor * \
+                targets_batch = reward_batch + discount_factor_batch * \
                     q_values_next_target[np.arange(batch_size), best_actions]
 
                 # update
@@ -58,7 +57,7 @@ def dqn(sess,
 
                 summary_writer.add_summary(summaries, total_t)
                 print('\r{}th update loss: {}'.format(total_t, loss), end='')
-                
+
                 if total_t % update_target_every == 0:
                     estimator.target_update(sess)
                     print('\ntarget update!')
