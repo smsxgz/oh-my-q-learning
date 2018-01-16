@@ -31,7 +31,7 @@ def main(game_name):
     tf.reset_default_graph()
     tf.Variable(0, name='global_step', trainable=False)
     summary_writer = tf.summary.FileWriter(events_path)
-    optimizer = tf.train.AdamOptimizer(1e-4)
+    optimizer = tf.train.AdamOptimizer(1e-3)
 
     estimator = Estimator(
         env.state_shape[0], env.action_n, optimizer, update_target_rho=1)
