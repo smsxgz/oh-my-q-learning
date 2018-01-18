@@ -55,13 +55,7 @@ class Estimator(object):
 
         with tf.variable_scope('q'):
             self.predictions = self._network(self.X_pl, action_n)
-        with tf.variable_scope('target'):
-            self.target_predictions = self._network(self.X_pl, action_n)
 
-        with tf.variable_scope('target_update'):
-            self.update_target_op = self._get_update_target_op()
-
-        with tf.variable_scope('train'):
             batch_size = tf.shape(self.X_pl)[0]
 
             # Get the predictions for the chosen actions only
@@ -91,6 +85,10 @@ class Estimator(object):
                 tf.summary.scalar("min_q_value",
                                   tf.reduce_min(self.predictions))
             ])
+        with tf.variable_scope('target'):
+            self.target_predictions = self._network(self.X_pl, action_n)
+
+            self.update_target_op = self._get_update_target_op()
 
     def predict(self, sess, s):
         return sess.run(self.predictions, {self.X_pl: s})
