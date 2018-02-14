@@ -11,9 +11,6 @@ class Estimator(object):
     ):
         """
         Notes:
-            network is callable,
-            receives nothing, returns X's placeholder and last layer of model.
-
             if update_target_rho is 1, we will copy q's parameters to target's
             parameters, and we should set update_target_every to be larger
             like 1000.
@@ -23,7 +20,7 @@ class Estimator(object):
         self._build_model(state_n, action_n)
 
     def _network(self, X, action_n):
-        output = tf.contrib.layers.fully_connected(X, 24)
+        output = tf.contrib.layers.fully_connected(X, 24, activation_fn=tf.nn.selu)
         output = tf.contrib.layers.fully_connected(
             output, action_n, activation_fn=None)
         return output
@@ -55,13 +52,7 @@ class Estimator(object):
 
         with tf.variable_scope('q'):
             self.predictions = self._network(self.X_pl, action_n)
-        with tf.variable_scope('target'):
-            self.target_predictions = self._network(self.X_pl, action_n)
-
-        with tf.variable_scope('target_update'):
-            self.update_target_op = self._get_update_target_op()
-
-        with tf.variable_scope('train'):
+            
             batch_size = tf.shape(self.X_pl)[0]
 
             # Get the predictions for the chosen actions only
@@ -91,6 +82,10 @@ class Estimator(object):
                 tf.summary.scalar("min_q_value",
                                   tf.reduce_min(self.predictions))
             ])
+        
+        with tf.variable_scope('target'):
+            self.target_predictions = self._network(self.X_pl, action_n)
+            self.update_target_op = self._get_update_target_op()
 
     def predict(self, sess, s):
         return sess.run(self.predictions, {self.X_pl: s})

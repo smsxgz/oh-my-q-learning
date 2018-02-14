@@ -7,13 +7,10 @@ class Estimator(object):
             state_n,
             action_n,
             optimizer,
-            update_target_rho=0.001,
+            update_target_rho=0.01,
     ):
         """
         Notes:
-            network is callable,
-            receives nothing, returns X's placeholder and last layer of model.
-
             if update_target_rho is 1, we will copy q's parameters to target's
             parameters, and we should set update_target_every to be larger
             like 1000.
@@ -39,14 +36,11 @@ class Estimator(object):
         ]
         e1_params = sorted(e1_params, key=lambda v: v.name)
 
-        rho = self.update_target_rho
         update_ops = []
-        norms = []
         for e1_v, e2_v in zip(e1_params, e2_params):
-            op = e2_v.assign(e1_v)
+            op = e2_v.assign((e1_v - e2_v) * self.update_target_rho + e2_v)
             update_ops.append(op)
-            norms.append(tf.reduce_sum(tf.square(e2_v - e1_v)))
-        return update_ops, tf.reduce_sum(norms)
+        return update_ops
 
     def _build_model(self, state_n, action_n):
         """Builds the Tensorflow graph."""
@@ -72,12 +66,12 @@ class Estimator(object):
                                                 self.action_predictions)
             self.loss = tf.reduce_mean(self.losses)
 
-            e1_params = [
-                t for t in tf.trainable_variables() if t.name.startswith('q')
-            ]
-            e1_params = sorted(e1_params, key=lambda v: v.name)
-            self.train_op = self.optimizer.minimize(
-                self.loss, global_step=tf.train.get_global_step(), var_list=e1_params)
+            self.grads_and_vars = self.optimizer.compute_gradients(self.loss)
+            self.grads_and_vars = [[grad, var]
+                                   for grad, var in self.grads_and_vars
+                                   if grad is not None]
+            self.train_op = self.optimizer.apply_gradients(
+                self.grads_and_vars, global_step=tf.train.get_global_step())
 
             self.summaries = tf.summary.merge([
                 tf.summary.scalar("loss", self.loss),
@@ -91,7 +85,7 @@ class Estimator(object):
         
         with tf.variable_scope('target'):
             self.target_predictions = self._network(self.X_pl, action_n)
-            self.update_target_op, self.norms = self._get_update_target_op()
+            self.update_target_op = self._get_update_target_op()
 
     def predict(self, sess, s):
         return sess.run(self.predictions, {self.X_pl: s})
@@ -101,7 +95,7 @@ class Estimator(object):
 
     def update(self, sess, s, a, y):
         feed_dict = {self.X_pl: s, self.actions_pl: a, self.y_pl: y}
-        # print('\n', sess.run(self.norms))
+
         return sess.run([
             self.summaries,
             tf.train.get_global_step(), self.train_op, self.loss

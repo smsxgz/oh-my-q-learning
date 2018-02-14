@@ -60,7 +60,7 @@ def dqn(sess,
 
                 if total_t % update_target_every == 0:
                     estimator.target_update(sess)
-                    print('\ntarget update!')
+                    # print('\ntarget update!')
 
                 if total_t % save_model_every == 0:
                     saver.save(sess,
