@@ -19,7 +19,8 @@ class Estimator(object):
         self.update_target_rho = update_target_rho
         self._build_model(state_n, action_n)
 
-    def _network(self, X, action_n):
+    @staticmethod
+    def _network(X, action_n):
         output = tf.contrib.layers.fully_connected(X, 24)
         output = tf.contrib.layers.fully_connected(
             output, action_n, activation_fn=None)
@@ -83,6 +84,10 @@ class Estimator(object):
                                   tf.reduce_min(self.predictions))
             ])
         
+        with tf.variable_scope('target'):
+            self.target_predictions = self._network(self.X_pl, action_n)
+            self.update_target_op = self._get_update_target_op()
+
         with tf.variable_scope('target'):
             self.target_predictions = self._network(self.X_pl, action_n)
             self.update_target_op = self._get_update_target_op()

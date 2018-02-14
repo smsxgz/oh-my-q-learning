@@ -52,7 +52,7 @@ class Estimator(object):
 
         with tf.variable_scope('q'):
             self.predictions = self._network(self.X_pl, action_n)
-            
+
             batch_size = tf.shape(self.X_pl)[0]
 
             # Get the predictions for the chosen actions only
