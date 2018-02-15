@@ -158,7 +158,9 @@ class WarpFrame(gym.ObservationWrapper):
         self.width = 84
         self.height = 84
         self.observation_space = Box(
-            low=0.0, high=1.0, shape=(self.height, self.width))
+            low=0.0,
+            high=1.0,
+            shape=(self.height, self.width))
 
     def _observation(self, frame):
         frame = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
@@ -176,7 +178,9 @@ class FrameStack(gym.Wrapper):
         self.frames = deque([], maxlen=k)
         shp = env.observation_space.shape
         self.observation_space = Box(
-            low=0.0, high=1.0, shape=(k, shp[0], shp[1]))
+            low=0.0,
+            high=1.0,
+            shape=(k, shp[0], shp[1]))
 
     def _reset(self):
         ob = self.env.reset()

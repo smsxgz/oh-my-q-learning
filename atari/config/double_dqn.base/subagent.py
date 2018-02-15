@@ -1,6 +1,7 @@
 import zmq
 import click
 import msgpack
+import numpy as np
 import msgpack_numpy
 from wrapper import atari_env
 msgpack_numpy.patch()
