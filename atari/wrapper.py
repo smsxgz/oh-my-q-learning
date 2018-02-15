@@ -158,15 +158,12 @@ class WarpFrame(gym.ObservationWrapper):
         self.width = 84
         self.height = 84
         self.observation_space = Box(
-            low=0.0,
-            high=1.0,
-            shape=(1, self.height, self.width))
+            low=0.0, high=1.0, shape=(self.height, self.width))
 
     def _observation(self, frame):
         frame = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
         frame = cv2.resize(
             frame, (self.width, self.height), interpolation=cv2.INTER_AREA)
-        frame = np.reshape(frame, [1, 84, 84])
         frame = frame.astype(np.float32) / 255.0
         return frame
 
@@ -179,9 +176,7 @@ class FrameStack(gym.Wrapper):
         self.frames = deque([], maxlen=k)
         shp = env.observation_space.shape
         self.observation_space = Box(
-            low=0.0,
-            high=1.0,
-            shape=(shp[0] * k, shp[1], shp[2]))
+            low=0.0, high=1.0, shape=(k, shp[0], shp[1]))
 
     def _reset(self):
         ob = self.env.reset()
@@ -196,4 +191,4 @@ class FrameStack(gym.Wrapper):
 
     def _get_ob(self):
         assert len(self.frames) == self.k
-        return np.concatenate(self.frames, axis=1)
+        return np.array(self.frames)
