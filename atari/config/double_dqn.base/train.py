@@ -34,9 +34,9 @@ def main(game_name):
     optimizer = tf.train.AdamOptimizer(1e-3)
 
     estimator = Estimator(
-        env.state_shape[0], env.action_n, optimizer, update_target_rho=0.01)
+        env.state_shape, env.action_n, optimizer, update_target_rho=0.01)
 
-    memory = Memory(500000, 50000, 512)
+    memory = Memory(100000, 10000, 512)
     policy_fn = EpsilonGreedy(0.5, 0.1, 25000, summary_writer)
 
     config = tf.ConfigProto(allow_soft_placement=True)
@@ -54,7 +54,7 @@ def main(game_name):
         discount_factor=0.99,
         save_model_every=1000,
         update_target_every=1,
-        num_iterations=100000)
+        num_iterations=500000)
 
 
 if __name__ == '__main__':

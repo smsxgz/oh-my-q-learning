@@ -4,8 +4,8 @@ import tensorflow as tf
 class Estimator(object):
     def __init__(
             self,
-            state_n,
             action_n,
+            state_shape,
             optimizer,
             update_target_rho=0.01,
     ):
@@ -17,13 +17,20 @@ class Estimator(object):
         """
         self.optimizer = optimizer
         self.update_target_rho = update_target_rho
-        self._build_model(state_n, action_n)
+        self._build_model(state_shape, action_n)
 
     def _network(self, X, action_n):
-        output = tf.contrib.layers.fully_connected(X, 24, activation_fn=tf.nn.selu)
-        output = tf.contrib.layers.fully_connected(
-            output, action_n, activation_fn=None)
-        return output
+        conv1 = tf.contrib.layers.conv2d(X, 32, 8, 4, activation_fn=tf.nn.selu)
+        conv2 = tf.contrib.layers.conv2d(
+            conv1, 64, 4, 2, activation_fn=tf.nn.selu)
+        conv3 = tf.contrib.layers.conv2d(
+            conv2, 64, 3, 1, activation_fn=tf.nn.selu)
+
+        # Fully connected layers
+        flattened = tf.contrib.layers.flatten(conv3)
+        fc = tf.contrib.layers.fully_connected(flattened, 512)
+
+        return fc
 
     def _get_update_target_op(self):
         e2_params = [
@@ -42,17 +49,17 @@ class Estimator(object):
             update_ops.append(op)
         return update_ops
 
-    def _build_model(self, state_n, action_n):
+    def _build_model(self, state_shape, action_n):
         """Builds the Tensorflow graph."""
         self.X_pl = tf.placeholder(
-            shape=[None, state_n], dtype=tf.float32, name="X")
+            shape=[None] + [state_shape], dtype=tf.float32, name="X")
         self.actions_pl = tf.placeholder(
             shape=[None], dtype=tf.int32, name="actions")
         self.y_pl = tf.placeholder(shape=[None], dtype=tf.float32, name="y")
 
         with tf.variable_scope('q'):
             self.predictions = self._network(self.X_pl, action_n)
-            
+
             batch_size = tf.shape(self.X_pl)[0]
 
             # Get the predictions for the chosen actions only
@@ -82,7 +89,7 @@ class Estimator(object):
                 tf.summary.scalar("min_q_value",
                                   tf.reduce_min(self.predictions))
             ])
-        
+
         with tf.variable_scope('target'):
             self.target_predictions = self._network(self.X_pl, action_n)
             self.update_target_op = self._get_update_target_op()
