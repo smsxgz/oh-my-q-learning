@@ -3,7 +3,6 @@ import traceback
 import numpy as np
 import tensorflow as tf
 
-
 def dqn(sess,
         env,
         estimator,
@@ -88,4 +87,5 @@ def dqn(sess,
         except Exception as e:
             traceback.print_exc()
             break
+
     env.close()

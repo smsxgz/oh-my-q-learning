@@ -29,9 +29,9 @@ class Estimator(object):
         # Fully connected layers
         flattened = tf.contrib.layers.flatten(conv3)
         fc1 = tf.contrib.layers.fully_connected(flattened, 512, activation_fn=tf.nn.selu)
-        fc = tf.contrib.layers.fully_connected(fc1, action_n, activation_fn=None)
-
-        return fc
+        fc = tf.contrib.layers.fully_connected(fc1, action_n + 1, activation_fn=None)
+        q_values = fc[:, 1:] + tf.expand_dims(- tf.reduce_mean(fc[:, 1:], axis=1) + fc[:, 0], axis=1)
+        return q_values
 
     def _get_update_target_op(self):
         e2_params = [
