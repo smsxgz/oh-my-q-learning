@@ -102,7 +102,6 @@ def dqn(sess,
 
     except Exception:
         traceback.print_exc()
-        break
 
     finally:
         saver.save(
