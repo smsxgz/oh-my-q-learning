@@ -64,7 +64,7 @@ def dqn(sess,
 
                 if total_t % save_model_every == 0:
                     saver.save(sess,
-                               os.path.join(checkpoint_path, 'model'), total_t)
+                               os.path.join(checkpoint_path, 'model'), total_t, write_meta_graph=False)
                     print("\nSave session.")
 
             states = next_states
@@ -83,7 +83,7 @@ def dqn(sess,
                 summary_writer.flush()
 
         except KeyboardInterrupt:
-            saver.save(sess, os.path.join(checkpoint_path, 'model'), total_t)
+            saver.save(sess, os.path.join(checkpoint_path, 'model'), total_t, write_meta_graph=False)
             print("Keyboard interrupt!")
             break
         except Exception:

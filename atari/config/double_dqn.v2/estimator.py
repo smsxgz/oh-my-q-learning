@@ -15,10 +15,10 @@ class Estimator(object):
             parameters, and we should set update_target_every to be larger
             like 1000.
         """
+        self.activation_fn = tf.nn.selu
         self.optimizer = optimizer
         self.update_target_rho = update_target_rho
         self._build_model(state_shape, action_n)
-        self.activation_fn = tf.nn.selu
 
     def _network(self, X, action_n):
         conv1 = tf.contrib.layers.conv2d(
