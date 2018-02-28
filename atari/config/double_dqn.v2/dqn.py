@@ -89,8 +89,7 @@ def dqn(sess,
                 print('\r{}th update loss: {}'.format(total_t, loss), end='')
 
                 if rewards_buffer:
-                    mean_reward = sum(
-                        list(item.values())[0] for item in info) / len(info)
+                    mean_reward = sum(rewards_buffer) / len(rewards_buffer)
                     episode_summary = tf.Summary()
                     episode_summary.value.add(
                         simple_value=mean_reward,
