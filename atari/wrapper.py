@@ -6,8 +6,10 @@ from collections import deque
 from gym.spaces.box import Box
 
 
-def atari_env(env_id, skip=4, stack=4):
+def atari_env(env_id, skip=4, stack=4, videowriter=None):
     env = gym.make(env_id)
+    if videowriter:
+        env = VisualizeEnv(env, videowriter)
     if 'NoFrameskip' in env_id:
         assert 'NoFrameskip' in env.spec.id
         env = NoopResetEnv(env, noop_max=30)
@@ -19,6 +21,26 @@ def atari_env(env_id, skip=4, stack=4):
     env = FrameStack(env, stack)
     env = NormalizedEnv(env)
     return env
+
+
+class VisualizeEnv(gym.Wrapper):
+    def __init__(self, env, videowriter):
+        gym.Wrapper.__init__(self, env)
+        self.videowriter = videowriter
+        self.finish = False
+
+    def _reset(self):
+        if self.finish:
+            raise Exception('Video was ready! Do not reset the env!')
+        self.finish = True
+        return self.env.reset()
+
+    def _step(self, action):
+        obs, reward, done, info = self.env.step(action)
+        self.videowriter.write(obs)
+        if done:
+            self.videowriter.close()
+        return obs, reward, done, info
 
 
 class NormalizedEnv(gym.ObservationWrapper):
@@ -158,9 +180,7 @@ class WarpFrame(gym.ObservationWrapper):
         self.width = 84
         self.height = 84
         self.observation_space = Box(
-            low=0.0,
-            high=1.0,
-            shape=(self.height, self.width))
+            low=0.0, high=1.0, shape=(self.height, self.width))
 
     def _observation(self, frame):
         frame = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
@@ -178,9 +198,7 @@ class FrameStack(gym.Wrapper):
         self.frames = deque([], maxlen=k)
         shp = env.observation_space.shape
         self.observation_space = Box(
-            low=0.0,
-            high=1.0,
-            shape=(k, shp[0], shp[1]))
+            low=0.0, high=1.0, shape=(k, shp[0], shp[1]))
 
     def _reset(self):
         ob = self.env.reset()
