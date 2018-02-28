@@ -33,17 +33,19 @@ def dqn(sess,
         for i in range(learning_starts):
             q_values = estimator.predict(sess, states)
             actions = exploration_policy_fn(q_values, total_t)
-            next_states, rewards, dones, info = env.step(actions)
+            next_states, rewards, dones, _ = env.step(actions)
 
             memory_buffer.extend(
                 zip(states, actions, rewards, next_states, dones))
             states = next_states
 
         states = env.reset()
+        rewards_buffer = []
         for i in range(num_iterations):
             q_values = estimator.predict(sess, states)
             actions = exploration_policy_fn(q_values, total_t)
             next_states, rewards, dones, info = env.step(actions)
+            rewards_buffer.extend(list(info.values()))
 
             memory_buffer.extend(
                 zip(states, actions, rewards, next_states, dones))
@@ -68,9 +70,6 @@ def dqn(sess,
                 summaries, total_t, _, loss = estimator.update(
                     sess, states_batch, action_batch, targets_batch)
 
-                summary_writer.add_summary(summaries, total_t)
-                print('\r{}th update loss: {}'.format(total_t, loss), end='')
-
                 if total_t % update_target_every == 0:
                     estimator.target_update(sess)
 
@@ -84,18 +83,22 @@ def dqn(sess,
 
             states = next_states
 
-            # Add summaries to tensorboard
-            if info:
-                mean_reward = sum(
-                    list(item.values())[0] for item in info) / len(info)
-                episode_summary = tf.Summary()
-                episode_summary.value.add(
-                    simple_value=mean_reward,
-                    node_name="rewards",
-                    tag="rewards")
+            # Add summaries to tensorboard per 100 iterations
+            if total_t % 100 == 0:
+                summary_writer.add_summary(summaries, total_t)
+                print('\r{}th update loss: {}'.format(total_t, loss), end='')
 
-                summary_writer.add_summary(episode_summary, total_t)
-                summary_writer.flush()
+                if rewards_buffer:
+                    mean_reward = sum(
+                        list(item.values())[0] for item in info) / len(info)
+                    episode_summary = tf.Summary()
+                    episode_summary.value.add(
+                        simple_value=mean_reward,
+                        node_name="rewards",
+                        tag="rewards")
+
+                    summary_writer.add_summary(episode_summary, total_t)
+                    summary_writer.flush()
 
     except KeyboardInterrupt:
         print("\nKeyboard interrupt!")
