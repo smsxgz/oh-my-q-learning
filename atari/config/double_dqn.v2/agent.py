@@ -56,12 +56,12 @@ class Agent(object):
             self.agent_socket.send_multipart(
                 [addr, b'', msgpack.dumps(action)])
 
-        info = []
+        info = {}
         for _ in range(self.num_agents):
             addr, empty, msg = self.agent_socket.recv_multipart()
             msg = msgpack.loads(msg)
             if msg[-1]:
-                info.append({addr: msg[-1]})
+                info[addr] = msg[-1]
             self.addrs[addr] = msg[:-1]
         states, rewards, dones = map(np.array, zip(*self.addrs.values()))
         return states, rewards, dones, info
