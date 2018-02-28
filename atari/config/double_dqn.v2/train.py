@@ -31,7 +31,7 @@ def main(game_name, basename):
     summary_writer = tf.summary.FileWriter(events_path)
     optimizer = tf.train.AdamOptimizer(1e-4)
 
-    memory = Memory(100000, 10000, 256)
+    memory = Memory(100000, 256)
     policy_fn = EpsilonGreedy(0.5, 0.01, 50000, summary_writer)
 
     env = Agent(64, game_name)
@@ -53,6 +53,7 @@ def main(game_name, basename):
         discount_factor=0.99,
         save_model_every=1000,
         update_target_every=1,
+        learning_starts=200,
         num_iterations=500000)
 
 

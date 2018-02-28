@@ -61,11 +61,9 @@ class EpsilonGreedy(object):
 
 
 class Memory(object):
-    def __init__(self, capacity, init_size, batch_size, sample_every=1):
+    def __init__(self, capacity, batch_size):
         self.mem = deque(maxlen=capacity)
-        self.init_size = init_size
         self.batch_size = batch_size
-        self.sample_every = sample_every
         self.tot = 0
 
     def append(self, transition):
@@ -76,8 +74,6 @@ class Memory(object):
             self.append(t)
 
     def sample(self):
-        if len(self.mem) > self.init_size and \
-                self.tot % self.sample_every == 0:
-            samples = random.sample(self.mem, self.batch_size)
-            self.tot += 1
-            return map(np.array, zip(*samples))
+        samples = random.sample(self.mem, self.batch_size)
+        self.tot += 1
+        return map(np.array, zip(*samples))

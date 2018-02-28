@@ -14,6 +14,7 @@ def dqn(sess,
         discount_factor=0.99,
         save_model_every=1000,
         update_target_every=1,
+        learning_starts=100,
         num_iterations=500000):
 
     saver = tf.train.Saver(max_to_keep=num_iterations // save_model_every)
@@ -26,9 +27,20 @@ def dqn(sess,
             print('Loading failed, we will Start from scratch!!')
 
     total_t = sess.run(tf.train.get_global_step())
-    states = env.reset()
-    for i in range(num_iterations):
-        try:
+
+    try:
+        states = env.reset()
+        for i in range(learning_starts):
+            q_values = estimator.predict(sess, states)
+            actions = exploration_policy_fn(q_values, total_t)
+            next_states, rewards, dones, info = env.step(actions)
+
+            memory_buffer.extend(
+                zip(states, actions, rewards, next_states, dones))
+            states = next_states
+
+        states = env.reset()
+        for i in range(num_iterations):
             q_values = estimator.predict(sess, states)
             actions = exploration_policy_fn(q_values, total_t)
             next_states, rewards, dones, info = env.step(actions)
@@ -63,8 +75,11 @@ def dqn(sess,
                     estimator.target_update(sess)
 
                 if total_t % save_model_every == 0:
-                    saver.save(sess,
-                               os.path.join(checkpoint_path, 'model'), total_t, write_meta_graph=False)
+                    saver.save(
+                        sess,
+                        os.path.join(checkpoint_path, 'model'),
+                        total_t,
+                        write_meta_graph=False)
                     print("\nSave session.")
 
             states = next_states
@@ -82,11 +97,17 @@ def dqn(sess,
                 summary_writer.add_summary(episode_summary, total_t)
                 summary_writer.flush()
 
-        except KeyboardInterrupt:
-            saver.save(sess, os.path.join(checkpoint_path, 'model'), total_t, write_meta_graph=False)
-            print("Keyboard interrupt!")
-            break
-        except Exception:
-            traceback.print_exc()
-            break
-    env.close()
+    except KeyboardInterrupt:
+        print("\nKeyboard interrupt!")
+
+    except Exception:
+        traceback.print_exc()
+        break
+
+    finally:
+        saver.save(
+            sess,
+            os.path.join(checkpoint_path, 'model'),
+            total_t,
+            write_meta_graph=False)
+        env.close()
