@@ -36,7 +36,7 @@ def main(game_name):
     
     env = Agent(64, game_name)
     estimator = Estimator(
-        env.state_shape, env.action_n, optimizer, update_target_rho=0.01)
+        env.state_shape, env.action_n, optimizer, update_target_rho=0.001)
 
     config = tf.ConfigProto(allow_soft_placement=True)
     config.gpu_options.allow_growth = True

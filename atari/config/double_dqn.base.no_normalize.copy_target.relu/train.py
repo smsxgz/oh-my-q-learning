@@ -1,7 +1,7 @@
 import os
 import click
 
-used_gpu = '1'
+used_gpu = '2'
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = used_gpu
 import tensorflow as tf
@@ -36,7 +36,7 @@ def main(game_name):
     
     env = Agent(64, game_name)
     estimator = Estimator(
-        env.state_shape, env.action_n, optimizer, update_target_rho=0.01)
+        env.state_shape, env.action_n, optimizer, update_target_rho=1)
 
     config = tf.ConfigProto(allow_soft_placement=True)
     config.gpu_options.allow_growth = True
@@ -52,7 +52,7 @@ def main(game_name):
         policy_fn,
         discount_factor=0.99,
         save_model_every=1000,
-        update_target_every=1,
+        update_target_every=1000,
         num_iterations=500000)
 
 

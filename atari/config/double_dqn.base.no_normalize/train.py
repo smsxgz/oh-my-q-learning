@@ -32,7 +32,7 @@ def main(game_name):
     optimizer = tf.train.AdamOptimizer(1e-3)
 
     memory = Memory(100000, 10000, 512)
-    policy_fn = EpsilonGreedy(0.5, 0.1, 25000, summary_writer)
+    policy_fn = EpsilonGreedy(0.5, 0.01, 50000, summary_writer)
     
     env = Agent(64, game_name)
     estimator = Estimator(
