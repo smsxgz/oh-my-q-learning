@@ -67,7 +67,7 @@ def dqn(sess,
                     q_values_next_target[np.arange(batch_size), best_actions]
 
                 # update
-                summaries, total_t, _, loss = estimator.update(
+                summaries, total_t, _ = estimator.update(
                     sess, states_batch, action_batch, targets_batch)
 
                 if total_t % update_target_every == 0:
@@ -79,14 +79,13 @@ def dqn(sess,
                         os.path.join(checkpoint_path, 'model'),
                         total_t,
                         write_meta_graph=False)
-                    print("\nSave session.")
+                    print("Save session, global_step: {}.".format(total_t))
 
             states = next_states
 
             # Add summaries to tensorboard per 100 iterations
             if total_t % 100 == 0:
                 summary_writer.add_summary(summaries, total_t)
-                print('\r{}th update loss: {}'.format(total_t, loss), end='')
 
                 if rewards_buffer:
                     mean_reward = sum(rewards_buffer) / len(rewards_buffer)

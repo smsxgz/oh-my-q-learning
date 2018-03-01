@@ -103,10 +103,9 @@ class Estimator(object):
     def update(self, sess, s, a, y):
         feed_dict = {self.X_pl: s, self.actions_pl: a, self.y_pl: y}
 
-        return sess.run([
-            self.summaries,
-            tf.train.get_global_step(), self.train_op, self.loss
-        ], feed_dict)
+        return sess.run(
+            [self.summaries,
+             tf.train.get_global_step(), self.train_op], feed_dict)
 
     def target_update(self, sess):
         sess.run(self.update_target_op)
