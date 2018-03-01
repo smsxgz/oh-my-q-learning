@@ -64,7 +64,6 @@ class Memory(object):
     def __init__(self, capacity, batch_size):
         self.mem = deque(maxlen=capacity)
         self.batch_size = batch_size
-        self.tot = 0
 
     def append(self, transition):
         self.mem.append(transition)
@@ -75,5 +74,4 @@ class Memory(object):
 
     def sample(self):
         samples = random.sample(self.mem, self.batch_size)
-        self.tot += 1
         return map(np.array, zip(*samples))

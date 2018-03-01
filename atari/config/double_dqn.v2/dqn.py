@@ -98,6 +98,7 @@ def dqn(sess,
 
                     summary_writer.add_summary(episode_summary, total_t)
                     summary_writer.flush()
+                    rewards_buffer.clear()
 
     except KeyboardInterrupt:
         print("\nKeyboard interrupt!")
