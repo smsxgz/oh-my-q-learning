@@ -29,13 +29,13 @@ class VisualizeEnv(gym.Wrapper):
         self.videowriter = videowriter
         self.finish = False
 
-    def _reset(self):
+    def reset(self, **kwargs):
         if self.finish:
             raise Exception('Video was ready! Do not reset the env!')
         self.finish = True
-        return self.env.reset()
+        return self.env.reset(**kwargs)
 
-    def _step(self, action):
+    def step(self, action):
         obs, reward, done, info = self.env.step(action)
         self.videowriter.write(obs)
         if done:
@@ -51,7 +51,7 @@ class NormalizedEnv(gym.ObservationWrapper):
         self.alpha = 0.9999
         self.num_steps = 0
 
-    def _observation(self, observation):
+    def observation(self, observation):
         self.num_steps += 1
         self.state_mean = self.state_mean * self.alpha + \
             observation.mean() * (1 - self.alpha)
