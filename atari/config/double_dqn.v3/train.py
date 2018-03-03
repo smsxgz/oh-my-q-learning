@@ -9,7 +9,6 @@ import tensorflow as tf
 from dqn import dqn
 from agent import Agent
 from util import train_path
-from util import Memory
 from util import EpsilonGreedy
 from estimator import Estimator
 
