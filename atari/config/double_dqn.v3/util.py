@@ -29,13 +29,13 @@ def make_train_path(train_prefix=None):
 
 def make_soft_link(base_path, path):
     if not os.path.exists(path):
-        os.system('ln -s {} train_log'.format(base_path))
+        os.system('ln -s {} {}'.format(base_path, path))
     elif os.path.realpath(path) != os.path.realpath(base_path):
-        os.system('rm train_log')
-        os.system('ln -s {} train_log'.format(base_path))
+        os.system('rm {}'.format(path))
+        os.system('ln -s {} {}'.format(base_path, path))
 
 
-train_path = make_train_path('/data/Xie/atari_train_log')
+train_path = make_train_path('/data/xie_atari_train_logs')
 
 
 class EpsilonGreedy(object):
