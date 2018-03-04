@@ -36,7 +36,7 @@ def make_soft_link(base_path, path):
         os.system('ln -s {} train_log'.format(base_path))
 
 
-train_path = make_train_path()
+train_path = make_train_path('/data/Xie/atari_train_log')
 
 
 class EpsilonGreedy(object):
