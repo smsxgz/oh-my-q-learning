@@ -3,7 +3,6 @@ import random
 import numpy as np
 import tensorflow as tf
 from collections import deque
-from collections import defaultdict
 
 
 def make_train_path():
@@ -75,37 +74,3 @@ class Memory(object):
     def sample(self, batch_size):
         samples = random.sample(self.mem, batch_size)
         return map(np.array, zip(*samples))
-
-
-class ResultsBuffer(object):
-    def __init__(self):
-        self.buffer = defaultdict(list)
-
-    def update(self, info):
-        for key in info:
-            msg = info[key]
-            self.buffer['reward'].append(msg[b'reward'])
-            self.buffer['length'].append(msg[b'length'])
-            if b'real_reward' in msg:
-                self.buffer['real_reward'].append(msg[b'real_reward'])
-
-    def record(self, summary_writer, total_t):
-        if self.buffer:
-            reward = np.mean(self.buffer['reward'])
-            self.buffer['reward'].clear()
-            length = np.mean(self.buffer['length'])
-            self.buffer['length'].clear()
-            if 'real_reward' in self.buffer:
-                real_reward = np.mean(self.buffer['real_reward'])
-                self.buffer['real_reward'].clear()
-            else:
-                real_reward = None
-            summary = tf.Summary()
-            summary.value.add(simple_value=reward, tag='results/rewards')
-            summary.value.add(simple_value=length, tag='results/lengths')
-            if real_reward is not None:
-                summary.value.add(
-                    simple_value=real_reward, tag='results/real_rewards')
-
-            summary_writer.add_summary(summary, total_t)
-            summary_writer.flush()

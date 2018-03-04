@@ -1,9 +1,45 @@
 import os
+import time
 import traceback
 import numpy as np
 import tensorflow as tf
-from util import ResultsBuffer
 from util import Memory
+from collections import defaultdict
+
+
+class ResultsBuffer(object):
+    def __init__(self):
+        self.buffer = defaultdict(list)
+
+    def update(self, info):
+        for key in info:
+            msg = info[key]
+            self.buffer['reward'].append(msg[b'reward'])
+            self.buffer['length'].append(msg[b'length'])
+            if b'real_reward' in msg:
+                self.buffer['real_reward'].append(msg[b'real_reward'])
+
+    def record(self, summary_writer, total_t, time):
+        if self.buffer:
+            reward = np.mean(self.buffer['reward'])
+            self.buffer['reward'].clear()
+            length = np.mean(self.buffer['length'])
+            self.buffer['length'].clear()
+            if 'real_reward' in self.buffer:
+                real_reward = np.mean(self.buffer['real_reward'])
+                self.buffer['real_reward'].clear()
+            else:
+                real_reward = None
+            summary = tf.Summary()
+            summary.value.add(simple_value=time, tag='time')
+            summary.value.add(simple_value=reward, tag='results/rewards')
+            summary.value.add(simple_value=length, tag='results/lengths')
+            if real_reward is not None:
+                summary.value.add(
+                    simple_value=real_reward, tag='results/real_rewards')
+
+            summary_writer.add_summary(summary, total_t)
+            summary_writer.flush()
 
 
 def dqn(sess,
@@ -47,6 +83,7 @@ def dqn(sess,
 
         states = env.reset()
 
+        start = time.time()
         for i in range(num_iterations):
             q_values = estimator.predict(sess, states)
             actions = exploration_policy_fn(q_values, total_t)
@@ -86,12 +123,12 @@ def dqn(sess,
                     write_meta_graph=False)
                 print("Save session, global_step: {}.".format(total_t))
 
-            states = next_states
-
-            # Add summaries to tensorboard per 100 iterations
-            if total_t % 100 == 0:
                 summary_writer.add_summary(summaries, total_t)
-                results_buffer.record(summary_writer, total_t)
+                results_buffer.record(summary_writer, total_t,
+                                      time.time() - start)
+                start = time.time()
+
+            states = next_states
 
     except KeyboardInterrupt:
         print("\nKeyboard interrupt!")

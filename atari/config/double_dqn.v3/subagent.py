@@ -7,6 +7,32 @@ from wrapper import atari_env
 msgpack_numpy.patch()
 
 
+class GameInfo(object):
+    def __init__(self):
+        self.reward = 0.0
+        self.real_reward = 0.0
+        self.length = 0
+        self.real_length = 0
+
+    def update(self, reward):
+        self.reward += reward
+        self.real_reward += reward
+        self.length += 1
+        self.real_length += 1
+
+    def get(self, lives):
+        info = {}
+        info = {b'reward': self.reward, b'length': self.length}
+        self.reward = 0.0
+        self.length = 0
+        if lives == 0:
+            info[b'real_reward'] = self.real_reward
+            info[b'real_length'] = self.real_length
+            self.real_reward = 0.0
+            self.real_length = 0
+        return info
+
+
 class SubAgent(object):
     def __init__(self, game_name, identity, url):
         self.env = atari_env(game_name)
@@ -32,9 +58,7 @@ class SubAgent(object):
             action = socket.recv()
             if action == b'reset':
                 state = self.env.reset()
-                game_reward = 0
-                game_length = 0
-                game_real_reward = 0
+                game_info = GameInfo()
                 socket.send(msgpack.dumps(state))
                 continue
 
@@ -46,18 +70,10 @@ class SubAgent(object):
             action = msgpack.loads(action)
             assert action in self.allowed_actions
             next_state, reward, done, _ = self.env.step(action)
-            game_reward += reward
-            game_length += 1
-            game_real_reward += reward
+            game_info.update(reward)
             info = {}
             if done:
-                info = {'reward': game_reward, 'length': game_length}
-                game_reward = 0
-                game_length = 0
-                if self.env.unwrapped.ale.lives() == 0:
-                    info['real_reward'] = game_real_reward
-                    game_real_reward = 0
-                
+                info = game_info.get(self.env.unwrapped.ale.lives())
                 next_state = self.env.reset()
 
             socket.send(
