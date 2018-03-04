@@ -18,25 +18,30 @@ class ResultsBuffer(object):
             self.buffer['length'].append(msg[b'length'])
             if b'real_reward' in msg:
                 self.buffer['real_reward'].append(msg[b'real_reward'])
+                self.buffer['real_length'].append(msg[b'real_length'])
 
     def record(self, summary_writer, total_t, time):
         if self.buffer:
             reward = np.mean(self.buffer['reward'])
-            self.buffer['reward'].clear()
             length = np.mean(self.buffer['length'])
+            self.buffer['reward'].clear()
             self.buffer['length'].clear()
             if 'real_reward' in self.buffer:
                 real_reward = np.mean(self.buffer['real_reward'])
+                real_length = np.mean(self.buffer['real_length'])
                 self.buffer['real_reward'].clear()
+                self.buffer['real_length'].clear()
             else:
                 real_reward = None
             summary = tf.Summary()
             summary.value.add(simple_value=time, tag='time')
-            summary.value.add(simple_value=reward, tag='results/rewards')
-            summary.value.add(simple_value=length, tag='results/lengths')
+            summary.value.add(simple_value=reward, tag='results/reward')
+            summary.value.add(simple_value=length, tag='results/length')
             if real_reward is not None:
                 summary.value.add(
-                    simple_value=real_reward, tag='results/real_rewards')
+                    simple_value=real_reward, tag='results/real_reward')
+                summary.value.add(
+                    simple_value=real_length, tag='results/real_length')
 
             summary_writer.add_summary(summary, total_t)
             summary_writer.flush()

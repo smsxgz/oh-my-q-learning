@@ -56,7 +56,7 @@ class EpsilonGreedy(object):
 
     def __call__(self, q_values, global_step):
         epsilon = self.epsilon(global_step)
-        if self.summary_writer:
+        if global_step % 1000 == 0 and self.summary_writer:
             summary = tf.Summary()
             summary.value.add(simple_value=epsilon, tag='epsilon')
             self.summary_writer.add_summary(summary, global_step)
