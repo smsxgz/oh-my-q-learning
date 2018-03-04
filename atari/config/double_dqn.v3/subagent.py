@@ -51,13 +51,14 @@ class SubAgent(object):
             game_real_reward += reward
             info = {}
             if done:
-                next_state = self.env.reset()
                 info = {'reward': game_reward, 'length': game_length}
                 game_reward = 0
                 game_length = 0
-                if self.env.was_real_done:
+                if self.env.unwrapped.ale.lives() == 0:
                     info['real_reward'] = game_real_reward
                     game_real_reward = 0
+                
+                next_state = self.env.reset()
 
             socket.send(
                 msgpack.dumps((next_state, np.sign(reward), done, info)))

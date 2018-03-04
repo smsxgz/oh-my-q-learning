@@ -31,10 +31,8 @@ class SubAgent(object):
         while True:
             action = socket.recv()
             if action == b'reset':
-                state = self.env.reset()
                 game_reward = 0
-                game_length = 0
-                game_real_reward = 0
+                state = self.env.reset()
                 socket.send(msgpack.dumps(state))
                 continue
 
@@ -47,18 +45,11 @@ class SubAgent(object):
             assert action in self.allowed_actions
             next_state, reward, done, _ = self.env.step(action)
             game_reward += reward
-            game_length += 1
-            game_real_reward += reward
-            info = {}
+            info = None
             if done:
-                info = {'reward': game_reward, 'length': game_length}
-                game_reward = 0
-                game_length = 0
-                if self.env.unwrapped.ale.lives() == 0:
-                    info['real_reward'] = game_real_reward
-                    game_real_reward = 0
-                
                 next_state = self.env.reset()
+                info = game_reward
+                game_reward = 0
 
             socket.send(
                 msgpack.dumps((next_state, np.sign(reward), done, info)))

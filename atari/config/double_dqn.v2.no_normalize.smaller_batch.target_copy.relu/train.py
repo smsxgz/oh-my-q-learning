@@ -9,6 +9,7 @@ import tensorflow as tf
 from dqn import dqn
 from agent import Agent
 from util import train_path
+from util import Memory
 from util import EpsilonGreedy
 from estimator import Estimator
 
@@ -30,6 +31,7 @@ def main(game_name, basename):
     summary_writer = tf.summary.FileWriter(events_path)
     optimizer = tf.train.AdamOptimizer(1e-4)
 
+    memory = Memory(100000, 32)
     policy_fn = EpsilonGreedy(0.5, 0.01, 625000, summary_writer)
 
     env = Agent(32, game_name)
@@ -44,7 +46,7 @@ def main(game_name, basename):
     dqn(sess,
         env,
         estimator,
-        32,
+        memory,
         summary_writer,
         models_path,
         policy_fn,
@@ -52,7 +54,6 @@ def main(game_name, basename):
         save_model_every=1000,
         update_target_every=1000,
         learning_starts=200,
-        memory_size=100000,
         num_iterations=6250000)
 
 
