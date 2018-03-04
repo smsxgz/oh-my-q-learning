@@ -6,7 +6,7 @@ class Estimator(object):
             self,
             state_shape,
             action_n,
-            optimizer,
+            lr,
             update_target_rho=0.01,
     ):
         """
@@ -16,7 +16,7 @@ class Estimator(object):
             like 1000.
         """
         self.activation_fn = tf.nn.selu
-        self.optimizer = optimizer
+        self.optimizer = tf.train.AdamOptimizer(lr)
         self.update_target_rho = update_target_rho
         self._build_model(state_shape, action_n)
 
@@ -84,10 +84,10 @@ class Estimator(object):
 
             self.summaries = tf.summary.merge([
                 tf.summary.scalar("loss", self.loss),
-                tf.summary.scalar("max_q_value",
-                                  tf.reduce_max(self.predictions)),
-                tf.summary.scalar("min_q_value",
-                                  tf.reduce_min(self.predictions))
+                tf.summary.scalar("max_q_value", tf.reduce_max(
+                    self.predictions)),
+                tf.summary.scalar("min_q_value", tf.reduce_min(
+                    self.predictions))
             ])
 
         with tf.variable_scope('target'):

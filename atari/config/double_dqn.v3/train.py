@@ -28,13 +28,12 @@ def main(game_name, basename):
     tf.reset_default_graph()
     tf.Variable(0, name='global_step', trainable=False)
     summary_writer = tf.summary.FileWriter(events_path)
-    optimizer = tf.train.AdamOptimizer(1e-4)
 
     policy_fn = EpsilonGreedy(0.5, 0.01, 625000, summary_writer)
 
     env = Agent(32, game_name)
     estimator = Estimator(
-        env.state_shape, env.action_n, optimizer, update_target_rho=1.0)
+        env.state_shape, env.action_n, 1e-4, update_target_rho=1.0)
 
     config = tf.ConfigProto(allow_soft_placement=True)
     config.gpu_options.allow_growth = True
