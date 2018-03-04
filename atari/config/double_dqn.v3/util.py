@@ -13,17 +13,16 @@ def make_train_path(train_prefix=None):
 
     basename = os.path.basename(cwd)
     if train_prefix is not None:
-        base_train_path = os.path.join(train_prefix, basename)
+        base_train_path = os.path.join(train_prefix)
+        if not os.path.exists(base_train_path):
+            os.makedirs(base_train_path)
+        make_soft_link(base_train_path, os.path.join(path[:-6], 'train_log'))
+
     pre_train_path = os.path.join(path[:-6], 'train_log', basename)
     train_path = os.path.join(cwd, 'train_log')
 
-    if train_prefix is not None:
-        if not os.path.exists(base_train_path):
-            os.makedirs(base_train_path)
-        make_soft_link(base_train_path, pre_train_path)
-    else:
-        if not os.path.exists(pre_train_path):
-            os.makedirs(pre_train_path)
+    if not os.path.exists(pre_train_path):
+        os.makedirs(pre_train_path)
     make_soft_link(pre_train_path, train_path)
     return train_path
 
