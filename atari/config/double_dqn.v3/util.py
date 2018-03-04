@@ -84,17 +84,20 @@ class ResultsBuffer(object):
     def update(self, info):
         for key in info:
             msg = info[key]
-            self.buffer['reward'].append(msg['reward'])
-            self.buffer['length'].append(msg['length'])
-            if 'real_reward' in msg:
-                self.buffer['real_reward'].append(msg['real_reward'])
+            self.buffer['reward'].append(msg[b'reward'])
+            self.buffer['length'].append(msg[b'length'])
+            if b'real_reward' in msg:
+                self.buffer['real_reward'].append(msg[b'real_reward'])
 
     def record(self, summary_writer, total_t):
         if self.buffer:
             reward = np.mean(self.buffer['reward'])
+            self.buffer['reward'].clear()
             length = np.mean(self.buffer['length'])
+            self.buffer['length'].clear()
             if 'real_reward' in self.buffer:
                 real_reward = np.mean(self.buffer['real_reward'])
+                self.buffer['real_reward'].clear()
             else:
                 real_reward = None
             summary = tf.Summary()
@@ -106,4 +109,3 @@ class ResultsBuffer(object):
 
             summary_writer.add_summary(summary, total_t)
             summary_writer.flush()
-            self.buffer.clear()

@@ -35,7 +35,7 @@ def main(game_name, basename):
 
     env = Agent(32, game_name)
     estimator = Estimator(
-        env.state_shape, env.action_n, optimizer, update_target_rho=0.01)
+        env.state_shape, env.action_n, optimizer, update_target_rho=1.0)
 
     config = tf.ConfigProto(allow_soft_placement=True)
     config.gpu_options.allow_growth = True
@@ -51,7 +51,7 @@ def main(game_name, basename):
         policy_fn,
         discount_factor=0.99,
         save_model_every=1000,
-        update_target_every=1,
+        update_target_every=1000,
         learning_starts=200,
         memory_size=100000,
         num_iterations=6250000)
