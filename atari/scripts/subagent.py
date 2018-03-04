@@ -22,12 +22,12 @@ class GameInfo(object):
 
     def get(self, lives):
         info = {}
-        info = {'reward': self.reward, 'length': self.length}
+        info = {b'reward': self.reward, b'length': self.length}
         self.reward = 0.0
         self.length = 0
         if lives == 0:
-            info['real_reward'] = self.real_reward
-            info['real_length'] = self.real_length
+            info[b'real_reward'] = self.real_reward
+            info[b'real_length'] = self.real_length
             self.real_reward = 0.0
             self.real_length = 0
         return info

@@ -5,25 +5,35 @@ import tensorflow as tf
 from collections import deque
 
 
-def make_train_path():
+def make_train_path(train_prefix=None):
     # make train dir
     cwd = os.getcwd()
     path = os.path.dirname(cwd)
     assert path[-6:] == 'config'
 
     basename = os.path.basename(cwd)
-    true_train_path = os.path.join(path[:-6], 'train_log', basename)
+    if train_prefix is not None:
+        base_train_path = os.path.join(train_prefix, basename)
+    pre_train_path = os.path.join(path[:-6], 'train_log', basename)
     train_path = os.path.join(cwd, 'train_log')
 
-    if not os.path.exists(true_train_path):
-        os.makedirs(true_train_path)
-
-    if not os.path.exists(train_path):
-        os.system('ln -s {} train_log'.format(true_train_path))
-    elif os.path.realpath(train_path) != true_train_path:
-        os.system('rm train_log')
-        os.system('ln -s {} train_log'.format(true_train_path))
+    if train_prefix is not None:
+        if not os.path.exists(base_train_path):
+            os.makedirs(base_train_path)
+        make_soft_link(base_train_path, pre_train_path)
+    else:
+        if not os.path.exists(pre_train_path):
+            os.makedirs(pre_train_path)
+    make_soft_link(pre_train_path, train_path)
     return train_path
+
+
+def make_soft_link(base_path, path):
+    if not os.path.exists(path):
+        os.system('ln -s {} train_log'.format(base_path))
+    elif os.path.realpath(path) != os.path.realpath(base_path):
+        os.system('rm train_log')
+        os.system('ln -s {} train_log'.format(base_path))
 
 
 train_path = make_train_path()
