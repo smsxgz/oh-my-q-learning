@@ -19,8 +19,7 @@ def visualize(game_name):
     videoWriter = cv2.VideoWriter('{}.mp4'.format(game_name),
                                   cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'),
                                   60, (210, 160))
-    env = atari_env(game_name, videowriter=videoWriter)
-    # env = atari_env(game_name, videowriter=None)
+    env = atari_env(game_name)
 
     checkpoint_path = os.path.join(train_path, game_name, 'models')
     estimator = Estimator(
@@ -38,7 +37,7 @@ def visualize(game_name):
     latest_checkpoint = tf.train.latest_checkpoint(checkpoint_path)
     saver.restore(sess, latest_checkpoint)
 
-    state = env.reset()
+    state = env.reset(videoWriter)
     lives = env.unwrapped.ale.lives()
     while True:
         q_value = estimator.predict(sess, [state])
@@ -51,6 +50,9 @@ def visualize(game_name):
             if lives == 0:
                 break
             state = env.reset()
+
+        videoWriter.release()
+        cv2.destroyAllWindows()
 
 
 if __name__ == '__main__':

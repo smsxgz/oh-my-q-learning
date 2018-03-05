@@ -6,14 +6,13 @@ from collections import deque
 from gym.spaces.box import Box
 
 
-def atari_env(env_id, skip=4, stack=4, videowriter=None):
+def atari_env(env_id, skip=4, stack=4):
     env = gym.make(env_id)
     if 'NoFrameskip' in env_id:
         assert 'NoFrameskip' in env.spec.id
         env = NoopResetEnv(env, noop_max=30)
         env = MaxAndSkipEnv(env, skip=skip)
-    if videowriter:
-        env = VisualizeEnv(env, videowriter)
+    env = VisualizeEnv(env)
     env = EpisodicLifeEnv(env)
     if 'FIRE' in env.unwrapped.get_action_meanings():
         env = FireResetEnv(env)
@@ -26,20 +25,16 @@ def atari_env(env_id, skip=4, stack=4, videowriter=None):
 class VisualizeEnv(gym.Wrapper):
     def __init__(self, env, videowriter):
         gym.Wrapper.__init__(self, env)
-        self.videowriter = videowriter
-        self.finish = False
+        self.videowriter = None
 
-    def reset(self, **kwargs):
-        if self.finish:
-            raise Exception('Video was ready! Do not reset the env!')
-        self.finish = True
+    def reset(self, videowriter=None, **kwargs):
+        self.videowriter = videowriter
         return self.env.reset(**kwargs)
 
     def step(self, action):
         obs, reward, done, info = self.env.step(action)
-        self.videowriter.write(obs)
-        if done:
-            self.videowriter.close()
+        if self.videowriter is not None:
+            self.videowriter.write(obs)
         return obs, reward, done, info
 
 
