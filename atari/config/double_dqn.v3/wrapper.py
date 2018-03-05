@@ -34,7 +34,7 @@ class VisualizeEnv(gym.Wrapper):
     def step(self, action):
         obs, reward, done, info = self.env.step(action)
         if self.videowriter is not None:
-            self.videowriter.write(obs)
+            self.videowriter.append_data(obs)
         return obs, reward, done, info
 
 
