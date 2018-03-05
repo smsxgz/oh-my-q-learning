@@ -1,5 +1,5 @@
 import os
-import cv2
+import imageio
 import click
 import numpy as np
 
@@ -16,9 +16,7 @@ from estimator import Estimator
 @click.command()
 @click.option('--game_name')
 def visualize(game_name):
-    videoWriter = cv2.VideoWriter('{}.mp4'.format(game_name),
-                                  cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'),
-                                  60, (210, 160))
+    videoWriter = imageio.get_writer('{}.mp4'.format(game_name), fps=30)
     env = atari_env(game_name)
 
     checkpoint_path = os.path.join(train_path, game_name, 'models')
@@ -51,7 +49,7 @@ def visualize(game_name):
                 break
             state = env.reset()
 
-        videoWriter.release()
+        videoWriter.close()
 
 
 if __name__ == '__main__':
