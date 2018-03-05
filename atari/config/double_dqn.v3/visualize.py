@@ -37,7 +37,7 @@ def visualize(game_name):
     latest_checkpoint = tf.train.latest_checkpoint(checkpoint_path)
     saver.restore(sess, latest_checkpoint)
 
-    state = env.reset(videoWriter)
+    state = env.reset(videowriter=videoWriter)
     lives = env.unwrapped.ale.lives()
     while True:
         q_value = estimator.predict(sess, [state])
@@ -52,7 +52,6 @@ def visualize(game_name):
             state = env.reset()
 
         videoWriter.release()
-        cv2.destroyAllWindows()
 
 
 if __name__ == '__main__':

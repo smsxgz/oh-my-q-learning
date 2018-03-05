@@ -23,7 +23,7 @@ def atari_env(env_id, skip=4, stack=4):
 
 
 class VisualizeEnv(gym.Wrapper):
-    def __init__(self, env, videowriter):
+    def __init__(self, env):
         gym.Wrapper.__init__(self, env)
         self.videowriter = None
 
