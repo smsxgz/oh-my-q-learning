@@ -54,7 +54,7 @@ class Estimator(object):
     def _build_model(self, state_shape, action_n):
         """Builds the Tensorflow graph."""
         self.X_pl = tf.placeholder(
-            shape=[None] + state_shape, dtype=tf.float32, name="X")
+            shape=[None] + list(state_shape), dtype=tf.float32, name="X")
         self.actions_pl = tf.placeholder(
             shape=[None], dtype=tf.int32, name="actions")
         self.y_pl = tf.placeholder(shape=[None], dtype=tf.float32, name="y")
