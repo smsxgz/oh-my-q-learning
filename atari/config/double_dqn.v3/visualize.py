@@ -16,7 +16,8 @@ from estimator import Estimator
 @click.command()
 @click.option('--game_name')
 def visualize(game_name):
-    videoWriter = imageio.get_writer('{}.mp4'.format(game_name), fps=30)
+    # videoWriter = imageio.get_writer('{}.mp4'.format(game_name), fps=30)
+    videoWriter = None
     env = atari_env(game_name)
 
     checkpoint_path = os.path.join(train_path, game_name, 'models')
@@ -35,22 +36,27 @@ def visualize(game_name):
     latest_checkpoint = tf.train.latest_checkpoint(checkpoint_path)
     saver.restore(sess, latest_checkpoint)
 
-    state = env.reset(videowriter=videoWriter)
-    lives = env.unwrapped.ale.lives()
-    while True:
-        q_value = estimator.predict(sess, [state])
-        action = np.argmax(q_value[0])
-        state, reward, done, _ = env.step(action)
-        if done:
-            assert env.unwrapped.ale.lives() < lives
-            lives = env.unwrapped.ale.lives()
-            print(lives)
-            if lives == 0:
-                break
-            state = env.reset()
+    res = []
+    for i in range(100):
+        state = env.reset(videowriter=videoWriter)
+        lives = env.unwrapped.ale.lives()
+        r = 0
+        while True:
+            q_value = estimator.predict(sess, [state])
+            action = np.argmax(q_value[0])
+            state, reward, done, _ = env.step(action)
+            r += reward
+            if done:
+                assert env.unwrapped.ale.lives() < lives
+                lives = env.unwrapped.ale.lives()
+                if lives == 0:
+                    print(r)
+                    res.append(r)
+                    break
+                state = env.reset()
 
-        videoWriter.close()
-
+    videoWriter.close()
+    print(sum(res) / 100)
 
 if __name__ == '__main__':
     visualize()
