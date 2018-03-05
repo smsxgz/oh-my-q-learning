@@ -15,6 +15,7 @@ def visualize(game_name):
                                   cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'),
                                   60, (210, 160))
     env = atari_env(game_name, videowriter=videoWriter)
+    # env = atari_env(game_name, videowriter=None)
 
     checkpoint_path = os.path.join(train_path, game_name, 'models')
     estimator = Estimator(
@@ -33,12 +34,18 @@ def visualize(game_name):
     saver.restore(sess, latest_checkpoint)
 
     state = env.reset()
+    lives = env.unwrapped.ale.lives()
     while True:
         q_value = estimator.predict(sess, [state])
         action = np.argmax(q_value[0])
         state, reward, done, _ = env.step(action)
-        if env.unwrapped.ale.lives() == 0:
-            break
+        if done:
+            assert env.unwrapped.ale.lives() < lives
+            lives = env.unwrapped.ale.lives()
+            print(lives)
+            if lives == 0:
+                break
+            state = env.reset()
 
 
 if __name__ == '__main__':
