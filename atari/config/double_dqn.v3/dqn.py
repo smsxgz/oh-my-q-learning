@@ -61,7 +61,7 @@ def dqn(sess,
         memory_size=100000,
         num_iterations=500000):
 
-    saver = tf.train.Saver(max_to_keep=num_iterations // save_model_every)
+    saver = tf.train.Saver(max_to_keep=50)
     latest_checkpoint = tf.train.latest_checkpoint(checkpoint_path)
     if latest_checkpoint:
         print("Loading model checkpoint {}...".format(latest_checkpoint))
