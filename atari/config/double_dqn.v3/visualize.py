@@ -15,9 +15,8 @@ from estimator import Estimator
 
 @click.command()
 @click.option('--game_name')
-def visualize(game_name):
-    # videoWriter = imageio.get_writer('{}.mp4'.format(game_name), fps=30)
-    videoWriter = None
+@click.option('--write_video', action="store_true")
+def main(game_name, write_video):
     env = atari_env(game_name)
 
     checkpoint_path = os.path.join(train_path, game_name, 'models')
@@ -36,8 +35,11 @@ def visualize(game_name):
     latest_checkpoint = tf.train.latest_checkpoint(checkpoint_path)
     saver.restore(sess, latest_checkpoint)
 
-    res = []
-    for i in range(100):
+    def visualize():
+        total_t = sess.run(tf.train.get_global_step())
+        videoWriter = imageio.get_writer(
+            '{}-{}.mp4'.format(game_name, total_t), fps=30)
+
         state = env.reset(videowriter=videoWriter)
         lives = env.unwrapped.ale.lives()
         r = 0
@@ -51,12 +53,37 @@ def visualize(game_name):
                 lives = env.unwrapped.ale.lives()
                 if lives == 0:
                     print(r)
-                    res.append(r)
                     break
-                state = env.reset()
+                else:
+                    state = env.reset()
+        videoWriter.close()
 
-    videoWriter.close()
-    print(sum(res) / 100)
+    def evaluate():
+        res = []
+        for i in range(50):
+            state = env.reset()
+            lives = env.unwrapped.ale.lives()
+            r = 0
+            while True:
+                q_value = estimator.predict(sess, [state])
+                action = np.argmax(q_value[0])
+                state, reward, done, _ = env.step(action)
+                r += reward
+                if done:
+                    assert env.unwrapped.ale.lives() < lives
+                    lives = env.unwrapped.ale.lives()
+                    if lives == 0:
+                        res.append(r)
+                        break
+                    else:
+                        state = env.reset()
+        print(sum(res) / 50)
+
+    if write_video:
+        visualize()
+    else:
+        evaluate()
+
 
 if __name__ == '__main__':
-    visualize()
+    main()
