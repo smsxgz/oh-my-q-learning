@@ -2,7 +2,12 @@ import os
 import cv2
 import click
 import numpy as np
+
+used_gpu = '0'
+os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"] = used_gpu
 import tensorflow as tf
+
 from util import train_path
 from wrapper import atari_env
 from estimator import Estimator
