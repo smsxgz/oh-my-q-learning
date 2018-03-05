@@ -8,12 +8,12 @@ from gym.spaces.box import Box
 
 def atari_env(env_id, skip=4, stack=4, videowriter=None):
     env = gym.make(env_id)
-    if videowriter:
-        env = VisualizeEnv(env, videowriter)
     if 'NoFrameskip' in env_id:
         assert 'NoFrameskip' in env.spec.id
         env = NoopResetEnv(env, noop_max=30)
         env = MaxAndSkipEnv(env, skip=skip)
+    if videowriter:
+        env = VisualizeEnv(env, videowriter)
     env = EpisodicLifeEnv(env)
     if 'FIRE' in env.unwrapped.get_action_meanings():
         env = FireResetEnv(env)

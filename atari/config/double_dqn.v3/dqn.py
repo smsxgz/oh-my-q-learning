@@ -87,7 +87,6 @@ def dqn(sess,
             states = next_states
 
         states = env.reset()
-
         start = time.time()
         for i in range(num_iterations):
             q_values = estimator.predict(sess, states)
