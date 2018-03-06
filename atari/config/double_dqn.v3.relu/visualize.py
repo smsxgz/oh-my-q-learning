@@ -40,11 +40,10 @@ def main(game_name, write_video):
     def visualize():
         total_t = sess.run(tf.train.get_global_step())
         videoWriter = imageio.get_writer(
-            'train_log/{}-{}.mp4'.format(game_name, total_t), fps=30)
+            '{}-{}.mp4'.format(game_name, total_t), fps=30)
 
         state = env.reset(videowriter=videoWriter)
         lives = env.unwrapped.ale.lives()
-        print(lives)
         r = 0
         while True:
             q_value = estimator.predict(sess, [state])
@@ -54,7 +53,6 @@ def main(game_name, write_video):
             if done:
                 assert env.unwrapped.ale.lives() < lives
                 lives = env.unwrapped.ale.lives()
-                print(lives)
                 if lives == 0:
                     print(r)
                     break
