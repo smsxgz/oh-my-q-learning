@@ -40,23 +40,27 @@ def main(game_name, write_video):
     def visualize():
         total_t = sess.run(tf.train.get_global_step())
         videoWriter = imageio.get_writer(
-            '{}-{}.mp4'.format(game_name, total_t), fps=30)
+            'train_log/{}-{}.mp4'.format(game_name, total_t), fps=30)
 
         state = env.reset(videowriter=videoWriter)
         lives = env.unwrapped.ale.lives()
+        print(lives)
         r = 0
+        tot = 0
         while True:
             q_value = estimator.predict(sess, [state])
             action = np.argmax(q_value[0])
             state, reward, done, _ = env.step(action)
             r += reward
+            tot += 1
             if done:
-                assert env.unwrapped.ale.lives() < lives
-                lives = env.unwrapped.ale.lives()
-                if lives == 0:
-                    print(r)
+                ale_lives = env.unwrapped.ale.lives()
+                print(ale_lives)
+                if ale_lives == 0 or lives == ale_lives:
+                    print(tot, r)
                     break
                 else:
+                    lives = ale_lives
                     state = env.reset()
         videoWriter.close()
 
@@ -72,12 +76,12 @@ def main(game_name, write_video):
                 state, reward, done, _ = env.step(action)
                 r += reward
                 if done:
-                    assert env.unwrapped.ale.lives() < lives
-                    lives = env.unwrapped.ale.lives()
-                    if lives == 0:
+                    ale_lives = env.unwrapped.ale.lives()
+                    if ale_lives == 0 or lives == ale_lives:
                         res.append(r)
                         break
                     else:
+                        lives = ale_lives
                         state = env.reset()
         print(sum(res) / 50)
 
