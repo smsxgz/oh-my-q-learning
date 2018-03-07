@@ -32,30 +32,30 @@ class ResultsBuffer(object):
         self.buffer['min_q_value'].append(min_q_value)
 
     def add_summary(self, summary_writer, total_t, time):
-        summary_writer.add_scalars(
-            '', {
-                'time': time,
-                'loss': np.mean(self.buffer['loss']),
-                'max_q_value': np.mean(self.buffer['max_q_value']),
-                'min_q_value': np.mean(self.buffer['min_q_value'])
-            }, total_t)
+        s = {
+            'time': time,
+            'loss': np.mean(self.buffer['loss']),
+            'max_q_value': np.mean(self.buffer['max_q_value']),
+            'min_q_value': np.mean(self.buffer['min_q_value'])
+        }
         if self.buffer['reward']:
-            summary_writer.add_scalars(
-                'game', {
-                    'reward': np.mean(self.buffer['reward']),
-                    'length': np.mean(self.buffer['length'])
-                }, total_t)
+            s.update({
+                'game/reward': np.mean(self.buffer['reward']),
+                'game/length': np.mean(self.buffer['length'])
+            })
             self.buffer['reward'].clear()
             self.buffer['length'].clear()
 
         if self.buffer['real_reward']:
-            summary_writer.add_scalars(
-                'game', {
-                    'real_reward': np.mean(self.buffer['real_reward']),
-                    'real_length': np.mean(self.buffer['real_length'])
-                }, total_t)
+            s.update({
+                'game/real_reward': np.mean(self.buffer['real_reward']),
+                'game/real_length': np.mean(self.buffer['real_length'])
+            })
             self.buffer['real_reward'].clear()
             self.buffer['real_length'].clear()
+
+        for key in s:
+            summary_writer.add_scalar(key, s[key], total_t)
 
 
 def dqn(sess,
