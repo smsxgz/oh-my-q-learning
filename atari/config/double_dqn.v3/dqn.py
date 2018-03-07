@@ -32,27 +32,11 @@ class ResultsBuffer(object):
         self.buffer['min_q_value'].append(min_q_value)
 
     def add_summary(self, summary_writer, total_t, time):
-        s = {
-            'time': time,
-            'loss': np.mean(self.buffer['loss']),
-            'max_q_value': np.mean(self.buffer['max_q_value']),
-            'min_q_value': np.mean(self.buffer['min_q_value'])
-        }
-        if self.buffer['reward']:
-            s.update({
-                'game/reward': np.mean(self.buffer['reward']),
-                'game/length': np.mean(self.buffer['length'])
-            })
-            self.buffer['reward'].clear()
-            self.buffer['length'].clear()
-
-        if self.buffer['real_reward']:
-            s.update({
-                'game/real_reward': np.mean(self.buffer['real_reward']),
-                'game/real_length': np.mean(self.buffer['real_length'])
-            })
-            self.buffer['real_reward'].clear()
-            self.buffer['real_length'].clear()
+        s = {'time': time}
+        for key in self.buffer:
+            if self.buffer[key]:
+                s[key] = np.mean(self.buffer[key])
+                self.buffer[key].clear()
 
         for key in s:
             summary_writer.add_scalar(key, s[key], total_t)
