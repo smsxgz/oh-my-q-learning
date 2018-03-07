@@ -20,13 +20,25 @@ class Estimator(object):
         self.update_target_rho = update_target_rho
         self._build_model(state_shape, action_n)
 
+        self.saver = tf.train.Saver(max_to_keep=50)
+
     def _network(self, X, action_n):
         conv1 = tf.contrib.layers.conv2d(
             X, 32, 8, 4, data_format='NCHW', activation_fn=self.activation_fn)
         conv2 = tf.contrib.layers.conv2d(
-            conv1, 64, 4, 2, data_format='NCHW', activation_fn=self.activation_fn)
+            conv1,
+            64,
+            4,
+            2,
+            data_format='NCHW',
+            activation_fn=self.activation_fn)
         conv3 = tf.contrib.layers.conv2d(
-            conv2, 64, 3, 1, data_format='NCHW', activation_fn=self.activation_fn)
+            conv2,
+            64,
+            3,
+            1,
+            data_format='NCHW',
+            activation_fn=self.activation_fn)
         # Fully connected layers
         flattened = tf.contrib.layers.flatten(conv3)
         fc1 = tf.contrib.layers.fully_connected(
@@ -81,13 +93,9 @@ class Estimator(object):
             self.train_op = self.optimizer.apply_gradients(
                 self.grads_and_vars, global_step=tf.train.get_global_step())
 
-            self.summaries = tf.summary.merge([
-                tf.summary.scalar("loss", self.loss),
-                tf.summary.scalar("max_q_value", tf.reduce_max(
-                    self.predictions)),
-                tf.summary.scalar("min_q_value", tf.reduce_min(
-                    self.predictions))
-            ])
+            # For summaries
+            self.max_q_value = tf.reduce_max(self.predictions)
+            self.min_q_value = tf.reduce_min(self.predictions)
 
         with tf.variable_scope('target'):
             self.target_predictions = self._network(self.X_pl, action_n)
@@ -102,9 +110,22 @@ class Estimator(object):
     def update(self, sess, s, a, y):
         feed_dict = {self.X_pl: s, self.actions_pl: a, self.y_pl: y}
 
-        return sess.run(
-            [self.summaries,
-             tf.train.get_global_step(), self.train_op], feed_dict)
+        return sess.run([
+            self.train_op,
+            tf.train.get_global_step(), self.loss, self.max_q_value,
+            self.min_q_value
+        ], feed_dict)
 
     def target_update(self, sess):
         sess.run(self.update_target_op)
+
+    def save(self, sess, checkpoint, total_t):
+        self.saver.save(sess, checkpoint, total_t, write_meta_graph=False)
+
+    def restore(self, sess, checkpoint_path):
+        latest_checkpoint = tf.train.latest_checkpoint(checkpoint_path)
+        if latest_checkpoint:
+            print("Loading model checkpoint {}...".format(latest_checkpoint))
+            self.saver.restore(sess, latest_checkpoint)
+        else:
+            print('No model in checkpoint_path!!')

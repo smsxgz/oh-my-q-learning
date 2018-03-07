@@ -1,6 +1,7 @@
 import os
 import click
 import traceback
+from tensorboardX import SummaryWriter
 
 used_gpu = '0'
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
@@ -28,7 +29,7 @@ def main(game_name, basename):
 
     tf.reset_default_graph()
     tf.Variable(0, name='global_step', trainable=False)
-    summary_writer = tf.summary.FileWriter(events_path)
+    summary_writer = SummaryWriter(events_path)
 
     policy_fn = EpsilonGreedy(0.5, 0.01, 625000, summary_writer)
 

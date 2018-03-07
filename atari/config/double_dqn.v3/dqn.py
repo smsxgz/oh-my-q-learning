@@ -4,20 +4,17 @@ import pickle
 import numpy as np
 import tensorflow as tf
 from util import Memory
+from collections import defaultdict
 
 
 class ResultsBuffer(object):
     def __init__(self, rewards_history=[]):
-        self.buffer = {
-            'reward': [],
-            'length': [],
-            'real_reward': [],
-            'real_length': []
-        }
+        self.buffer = defaultdict(list)
+
         assert isinstance(rewards_history, list)
         self.rewards_history = rewards_history
 
-    def update(self, info, total_t=None):
+    def update_infos(self, info, total_t):
         for key in info:
             msg = info[key]
             self.buffer['reward'].append(msg[b'reward'])
@@ -25,34 +22,40 @@ class ResultsBuffer(object):
             if b'real_reward' in msg:
                 self.buffer['real_reward'].append(msg[b'real_reward'])
                 self.buffer['real_length'].append(msg[b'real_length'])
-                if total_t is not None:
-                    self.rewards_history.append(
-                        [total_t, key, msg[b'real_reward']])
+                self.rewards_history.append(
+                    [total_t, key, msg[b'real_reward']])
+
+    def update_summaries(self, summaries, total_t):
+        loss, max_q_value, min_q_value = summaries
+        self.buffer['loss'].append(loss)
+        self.buffer['max_q_value'].append(max_q_value)
+        self.buffer['min_q_value'].append(min_q_value)
 
     def add_summary(self, summary_writer, total_t, time):
+        summary_writer.add_scalars(
+            '', {
+                'time': time,
+                'loss': np.mean(self.buffer['loss']),
+                'max_q_value': np.mean(self.buffer['max_q_value']),
+                'min_q_value': np.mean(self.buffer['min_q_value'])
+            }, total_t)
         if self.buffer['reward']:
-            reward = np.mean(self.buffer['reward'])
-            length = np.mean(self.buffer['length'])
-            if self.buffer['real_reward']:
-                real_reward = np.mean(self.buffer['real_reward'])
-                real_length = np.mean(self.buffer['real_length'])
-
-            summary = tf.Summary()
-            summary.value.add(simple_value=time, tag='time')
-            summary.value.add(simple_value=reward, tag='results/reward')
-            summary.value.add(simple_value=length, tag='results/length')
+            summary_writer.add_scalars(
+                'game', {
+                    'reward': np.mean(self.buffer['reward']),
+                    'length': np.mean(self.buffer['length'])
+                }, total_t)
             self.buffer['reward'].clear()
             self.buffer['length'].clear()
-            if self.buffer['real_reward']:
-                summary.value.add(
-                    simple_value=real_reward, tag='results/real_reward')
-                summary.value.add(
-                    simple_value=real_length, tag='results/real_length')
-                self.buffer['real_reward'].clear()
-                self.buffer['real_length'].clear()
 
-            summary_writer.add_summary(summary, total_t)
-            summary_writer.flush()
+        if self.buffer['real_reward']:
+            summary_writer.add_scalars(
+                'game', {
+                    'real_reward': np.mean(self.buffer['real_reward']),
+                    'real_length': np.mean(self.buffer['real_length'])
+                }, total_t)
+            self.buffer['real_reward'].clear()
+            self.buffer['real_length'].clear()
 
 
 def dqn(sess,
@@ -69,13 +72,12 @@ def dqn(sess,
         memory_size=100000,
         num_iterations=500000):
 
-    saver = tf.train.Saver(max_to_keep=50)
-    latest_checkpoint = tf.train.latest_checkpoint(checkpoint_path)
+    estimator.restore(sess, checkpoint_path)
+
     rewards_history = []
-    if latest_checkpoint:
-        print("Loading model checkpoint {}...".format(latest_checkpoint))
-        saver.restore(sess, latest_checkpoint)
-        with open('train_log/{}/rewards.pkl'.format(env.game_name), 'rb') as f:
+    pkl_path = 'train_log/{}/rewards.pkl'.format(env.game_name)
+    if os.path.exists(pkl_path):
+        with open(pkl_path, 'rb') as f:
             rewards_history = pickle.load(f)
 
     total_t = sess.run(tf.train.get_global_step())
@@ -101,7 +103,7 @@ def dqn(sess,
             actions = exploration_policy_fn(q_values, total_t)
             next_states, rewards, dones, info = env.step(actions)
 
-            results_buffer.update(info, total_t)
+            results_buffer.update_infos(info, total_t)
             memory_buffer.extend(
                 zip(states, actions, rewards, next_states, dones))
 
@@ -121,23 +123,24 @@ def dqn(sess,
                 q_values_next_target[np.arange(batch_size), best_actions]
 
             # update
-            summaries, total_t, _ = estimator.update(
+            _, total_t, *summaries = estimator.update(
                 sess, states_batch, action_batch, targets_batch)
+            results_buffer.update_summaries(summaries, total_t)
 
             if total_t % update_target_every == 0:
                 estimator.target_update(sess)
 
             if total_t % save_model_every == 0:
-                saver.save(
+                t = time.time() - start
+                estimator.save(
                     sess,
                     os.path.join(checkpoint_path, 'model'),
                     total_t,
                     write_meta_graph=False)
-                print("Save session, global_step: {}.".format(total_t))
+                print("Save session, global_step: {}, delta_time: {}.".format(
+                    total_t, t))
 
-                summary_writer.add_summary(summaries, total_t)
-                results_buffer.add_summary(summary_writer, total_t,
-                                           time.time() - start)
+                results_buffer.add_summary(summary_writer, total_t, t)
                 start = time.time()
 
             states = next_states
@@ -146,11 +149,7 @@ def dqn(sess,
         raise e
 
     finally:
-        saver.save(
-            sess,
-            os.path.join(checkpoint_path, 'model'),
-            total_t,
-            write_meta_graph=False)
+        estimator.save(sess, os.path.join(checkpoint_path, 'model'), total_t)
 
-        with open('train_log/{}/rewards.pkl'.format(env.game_name), 'wb') as f:
+        with open(pkl_path, 'wb') as f:
             pickle.dump(results_buffer.rewards_history, f)
