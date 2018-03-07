@@ -132,11 +132,8 @@ def dqn(sess,
 
             if total_t % save_model_every == 0:
                 t = time.time() - start
-                estimator.save(
-                    sess,
-                    os.path.join(checkpoint_path, 'model'),
-                    total_t,
-                    write_meta_graph=False)
+                estimator.save(sess, os.path.join(checkpoint_path, 'model'),
+                               total_t)
                 print("Save session, global_step: {}, delta_time: {}.".format(
                     total_t, t))
 

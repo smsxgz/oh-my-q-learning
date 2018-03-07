@@ -57,9 +57,7 @@ class EpsilonGreedy(object):
     def __call__(self, q_values, global_step):
         epsilon = self.epsilon(global_step)
         if global_step % 1000 == 0 and self.summary_writer:
-            summary = tf.Summary()
-            summary.value.add(simple_value=epsilon, tag='epsilon')
-            self.summary_writer.add_summary(summary, global_step)
+            self.summary_writer.add_scalar('epsilon', epsilon, global_step)
 
         batch_size = q_values.shape[0]
         best_actions = np.argmax(q_values, axis=1)
