@@ -15,7 +15,7 @@ class Estimator(object):
             parameters, and we should set update_target_every to be larger
             like 1000.
         """
-        self.activation_fn = tf.nn.selu
+        self.activation_fn = tf.nn.relu
         self.optimizer = tf.train.AdamOptimizer(lr)
         self.update_target_rho = update_target_rho
         self._build_model(state_shape, action_n)

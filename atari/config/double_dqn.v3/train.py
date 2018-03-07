@@ -1,5 +1,6 @@
 import os
 import click
+import traceback
 
 used_gpu = '0'
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
@@ -40,19 +41,26 @@ def main(game_name, basename):
     sess = tf.Session(config=config)
     sess.run(tf.global_variables_initializer())
 
-    dqn(sess,
-        env,
-        estimator,
-        32,
-        summary_writer,
-        models_path,
-        policy_fn,
-        discount_factor=0.99,
-        save_model_every=1000,
-        update_target_every=1000,
-        learning_starts=200,
-        memory_size=100000,
-        num_iterations=6250000)
+    try:
+        dqn(sess,
+            env,
+            estimator,
+            32,
+            summary_writer,
+            models_path,
+            policy_fn,
+            discount_factor=0.99,
+            save_model_every=1000,
+            update_target_every=1000,
+            learning_starts=200,
+            memory_size=100000,
+            num_iterations=6250000)
+    except KeyboardInterrupt:
+        print("\nKeyboard interrupt!!")
+    except Exception:
+        traceback.print_exc()
+    finally:
+        env.close()
 
 
 if __name__ == '__main__':

@@ -12,6 +12,7 @@ class Agent(object):
     """Control agents' threads."""
 
     def __init__(self, num_agents, game_name):
+        self.game_name = game_name
         path = './.ipc/{}'.format(game_name)
         if os.path.exists(path):
             os.system('rm {} -rf'.format(path))
