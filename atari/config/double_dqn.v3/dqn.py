@@ -1,6 +1,6 @@
 import os
-import json
 import time
+import pickle
 import numpy as np
 import tensorflow as tf
 from util import Memory
@@ -17,7 +17,7 @@ class ResultsBuffer(object):
         assert isinstance(rewards_history, list)
         self.rewards_history = rewards_history
 
-    def update(self, info, tot=None):
+    def update(self, info, total_t=None):
         for key in info:
             msg = info[key]
             self.buffer['reward'].append(msg[b'reward'])
@@ -25,31 +25,31 @@ class ResultsBuffer(object):
             if b'real_reward' in msg:
                 self.buffer['real_reward'].append(msg[b'real_reward'])
                 self.buffer['real_length'].append(msg[b'real_length'])
-                if tot is not None:
+                if total_t is not None:
                     self.rewards_history.append(
-                        [tot, key, msg[b'real_reward']])
+                        [total_t, key, msg[b'real_reward']])
 
     def add_summary(self, summary_writer, total_t, time):
         if self.buffer['reward']:
             reward = np.mean(self.buffer['reward'])
             length = np.mean(self.buffer['length'])
-            self.buffer['reward'].clear()
-            self.buffer['length'].clear()
             if self.buffer['real_reward']:
                 real_reward = np.mean(self.buffer['real_reward'])
                 real_length = np.mean(self.buffer['real_length'])
-                self.buffer['real_reward'].clear()
-                self.buffer['real_length'].clear()
 
             summary = tf.Summary()
             summary.value.add(simple_value=time, tag='time')
             summary.value.add(simple_value=reward, tag='results/reward')
             summary.value.add(simple_value=length, tag='results/length')
+            self.buffer['reward'].clear()
+            self.buffer['length'].clear()
             if self.buffer['real_reward']:
                 summary.value.add(
                     simple_value=real_reward, tag='results/real_reward')
                 summary.value.add(
                     simple_value=real_length, tag='results/real_length')
+                self.buffer['real_reward'].clear()
+                self.buffer['real_length'].clear()
 
             summary_writer.add_summary(summary, total_t)
             summary_writer.flush()
@@ -75,8 +75,8 @@ def dqn(sess,
     if latest_checkpoint:
         print("Loading model checkpoint {}...".format(latest_checkpoint))
         saver.restore(sess, latest_checkpoint)
-        with open('train_log/{}/rewards.json'.format(env.game_name), 'r') as f:
-            rewards_history = json.load(f)
+        with open('train_log/{}/rewards.pkl'.format(env.game_name), 'rb') as f:
+            rewards_history = pickle.load(f)
 
     total_t = sess.run(tf.train.get_global_step())
 
@@ -101,7 +101,7 @@ def dqn(sess,
             actions = exploration_policy_fn(q_values, total_t)
             next_states, rewards, dones, info = env.step(actions)
 
-            results_buffer.update(info)
+            results_buffer.update(info, total_t)
             memory_buffer.extend(
                 zip(states, actions, rewards, next_states, dones))
 
@@ -152,5 +152,5 @@ def dqn(sess,
             total_t,
             write_meta_graph=False)
 
-        with open('train_log/{}/rewards.json'.format(env.game_name), 'r') as f:
-            json.dump(results_buffer.rewards_history, f)
+        with open('train_log/{}/rewards.pkl'.format(env.game_name), 'wb') as f:
+            pickle.dump(results_buffer.rewards_history, f)
