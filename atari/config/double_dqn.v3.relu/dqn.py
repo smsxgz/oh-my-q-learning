@@ -1,17 +1,23 @@
 import os
+import json
 import time
-import traceback
 import numpy as np
 import tensorflow as tf
 from util import Memory
-from collections import defaultdict
 
 
 class ResultsBuffer(object):
-    def __init__(self):
-        self.buffer = defaultdict(list)
+    def __init__(self, rewards_history=[]):
+        self.buffer = {
+            'reward': [],
+            'length': [],
+            'real_reward': [],
+            'real_length': []
+        }
+        assert isinstance(rewards_history, list)
+        self.rewards_history = rewards_history
 
-    def update(self, info):
+    def update(self, info, tot=None):
         for key in info:
             msg = info[key]
             self.buffer['reward'].append(msg[b'reward'])
@@ -19,8 +25,11 @@ class ResultsBuffer(object):
             if b'real_reward' in msg:
                 self.buffer['real_reward'].append(msg[b'real_reward'])
                 self.buffer['real_length'].append(msg[b'real_length'])
+                if tot is not None:
+                    self.rewards_history.append(
+                        [tot, key, msg[b'real_reward']])
 
-    def record(self, summary_writer, total_t, time):
+    def add_summary(self, summary_writer, total_t, time):
         if self.buffer['reward']:
             reward = np.mean(self.buffer['reward'])
             length = np.mean(self.buffer['length'])
@@ -31,13 +40,12 @@ class ResultsBuffer(object):
                 real_length = np.mean(self.buffer['real_length'])
                 self.buffer['real_reward'].clear()
                 self.buffer['real_length'].clear()
-            else:
-                real_reward = None
+
             summary = tf.Summary()
             summary.value.add(simple_value=time, tag='time')
             summary.value.add(simple_value=reward, tag='results/reward')
             summary.value.add(simple_value=length, tag='results/length')
-            if real_reward is not None:
+            if self.buffer['real_reward']:
                 summary.value.add(
                     simple_value=real_reward, tag='results/real_reward')
                 summary.value.add(
@@ -63,17 +71,17 @@ def dqn(sess,
 
     saver = tf.train.Saver(max_to_keep=50)
     latest_checkpoint = tf.train.latest_checkpoint(checkpoint_path)
+    rewards_history = []
     if latest_checkpoint:
         print("Loading model checkpoint {}...".format(latest_checkpoint))
-        try:
-            saver.restore(sess, latest_checkpoint)
-        except Exception:
-            print('Loading failed, we will Start from scratch!!')
+        saver.restore(sess, latest_checkpoint)
+        with open('train_log/{}/rewards.json'.format(env.game_name), 'r') as f:
+            rewards_history = json.load(f)
 
     total_t = sess.run(tf.train.get_global_step())
 
     memory_buffer = Memory(memory_size)
-    results_buffer = ResultsBuffer()
+    results_buffer = ResultsBuffer(rewards_history)
 
     try:
         states = env.reset()
@@ -128,17 +136,14 @@ def dqn(sess,
                 print("Save session, global_step: {}.".format(total_t))
 
                 summary_writer.add_summary(summaries, total_t)
-                results_buffer.record(summary_writer, total_t,
-                                      time.time() - start)
+                results_buffer.add_summary(summary_writer, total_t,
+                                           time.time() - start)
                 start = time.time()
 
             states = next_states
 
-    except KeyboardInterrupt:
-        print("\nKeyboard interrupt!")
-
-    except Exception:
-        traceback.print_exc()
+    except Exception as e:
+        raise e
 
     finally:
         saver.save(
@@ -146,4 +151,6 @@ def dqn(sess,
             os.path.join(checkpoint_path, 'model'),
             total_t,
             write_meta_graph=False)
-        env.close()
+
+        with open('train_log/{}/rewards.json'.format(env.game_name), 'r') as f:
+            json.dump(results_buffer.rewards_history, f)

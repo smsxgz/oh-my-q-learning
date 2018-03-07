@@ -7,8 +7,22 @@
 在CartPole-v1上的实验表明：selu和larger_batch_size可以带来更好的稳定性（到达500分后不会突然掉到100分的水平）
 
 2018.3.5
-在atari上的实验终于接近成功啦！详见 atari/config/double_dqn.v3
+在Atari上的实验终于接近成功啦！详见 atari/config/double_dqn.v3
+
+安装ffmpeg：
+```bash
+conda install -c conda-forge ffmpeg
+```
 
 2018.3.7
-在atari上的实验结果表明relu远比selu好，我有一个猜测：selu在全连接网络上表现会比relu好；在卷积网络上可能relu更好。  
+在Atari上的实验结果表明relu远比selu好，我有一个猜测：selu在全连接网络上表现会比relu好；在卷积网络上可能relu更好。  
 PongNoFrameSkip-v4成功！
+
+解决pip install 'gym[mujoco]'失败的方法：
+```bash
+git clone https://github.com/openai/mujoco-py.git
+cd mujoco-py
+pip install -r requirements.txt
+pip install -r requirements.dev.txt
+python setup.py install
+```
