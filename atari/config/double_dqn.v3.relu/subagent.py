@@ -24,7 +24,7 @@ class GameInfo(object):
         info = {b'reward': self.reward, b'length': self.length}
         self.reward = 0.0
         self.length = 0
-        if info['was_real_done']:
+        if origin_info['was_real_done']:
             info[b'real_reward'] = self.real_reward
             info[b'real_length'] = self.real_length
             self.real_reward = 0.0

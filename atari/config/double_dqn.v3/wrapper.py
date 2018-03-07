@@ -16,8 +16,7 @@ def atari_env(env_id, skip=4, stack=4):
     env = EpisodicLifeEnv(env)
     if 'FIRE' in env.unwrapped.get_action_meanings():
         env = FireResetEnv(env)
-    env = WarpFrame(env)
-    env = FrameStack(env, stack)
+    env = FrameWarpAndStack(env, stack)
     # env = NormalizedEnv(env)
     return env
 
@@ -129,6 +128,7 @@ class EpisodicLifeEnv(gym.Wrapper):
             # once the environment advertises done.
             done = True
         self.lives = lives
+        info['was_real_done'] = self.was_real_done
         return obs, reward, done, info
 
     def reset(self, **kwargs):
@@ -175,47 +175,38 @@ class MaxAndSkipEnv(gym.Wrapper):
         return obs
 
 
-class WarpFrame(gym.ObservationWrapper):
-    def __init__(self, env):
-        """Warp frames to 84x84 as done in the Nature paper and later work."""
-        gym.ObservationWrapper.__init__(self, env)
-        self.width = 84
-        self.height = 84
-        self.observation_space = Box(
-            low=0.0,
-            high=1.0,
-            shape=(self.height, self.width),
-            dtype=np.float32)
-
-    def observation(self, frame):
-        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
-        frame = cv2.resize(
-            frame, (self.width, self.height), interpolation=cv2.INTER_AREA)
-        frame = frame.astype(np.float32) / 255.0
-        return frame
-
-
-class FrameStack(gym.Wrapper):
+class FrameWarpAndStack(gym.Wrapper):
     def __init__(self, env, k):
         """Stack k last frames."""
         gym.Wrapper.__init__(self, env)
         self.k = k
+        self.width = 84
+        self.height = 84
         self.frames = deque([], maxlen=k)
-        shp = env.observation_space.shape
         self.observation_space = Box(
-            low=0.0, high=1.0, shape=(k, shp[0], shp[1]), dtype=np.float32)
+            low=0.0,
+            high=1.0,
+            shape=(k, self.width, self.height),
+            dtype=np.float32)
 
     def reset(self, **kwargs):
         ob = self.env.reset(**kwargs)
         for _ in range(self.k):
-            self.frames.append(ob)
+            self.frames.append(self._preprocess(ob))
         return self._get_ob()
 
     def step(self, action):
         ob, reward, done, info = self.env.step(action)
-        self.frames.append(ob)
+        self.frames.append(self._preprocess(ob))
         return self._get_ob(), reward, done, info
 
     def _get_ob(self):
         assert len(self.frames) == self.k
         return np.array(self.frames).astype(np.float32)
+
+    def _preprocess(self, frame):
+        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
+        frame = cv2.resize(
+            frame, (self.width, self.height), interpolation=cv2.INTER_AREA)
+        frame = frame.astype(np.float32) / 255.0
+        return frame

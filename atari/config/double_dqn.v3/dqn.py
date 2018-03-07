@@ -21,12 +21,12 @@ class ResultsBuffer(object):
                 self.buffer['real_length'].append(msg[b'real_length'])
 
     def record(self, summary_writer, total_t, time):
-        if self.buffer:
+        if self.buffer['reward']:
             reward = np.mean(self.buffer['reward'])
             length = np.mean(self.buffer['length'])
             self.buffer['reward'].clear()
             self.buffer['length'].clear()
-            if 'real_reward' in self.buffer:
+            if self.buffer['real_reward']:
                 real_reward = np.mean(self.buffer['real_reward'])
                 real_length = np.mean(self.buffer['real_length'])
                 self.buffer['real_reward'].clear()

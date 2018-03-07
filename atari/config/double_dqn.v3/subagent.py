@@ -20,12 +20,11 @@ class GameInfo(object):
         self.length += 1
         self.real_length += 1
 
-    def get(self, lives):
-        info = {}
+    def get(self, origin_info):
         info = {b'reward': self.reward, b'length': self.length}
         self.reward = 0.0
         self.length = 0
-        if lives == 0:
+        if origin_info['was_real_done']:
             info[b'real_reward'] = self.real_reward
             info[b'real_length'] = self.real_length
             self.real_reward = 0.0
@@ -69,11 +68,11 @@ class SubAgent(object):
 
             action = msgpack.loads(action)
             assert action in self.allowed_actions
-            next_state, reward, done, _ = self.env.step(action)
+            next_state, reward, done, origin_info = self.env.step(action)
             game_info.update(reward)
             info = {}
             if done:
-                info = game_info.get(self.env.unwrapped.ale.lives())
+                info = game_info.get(origin_info)
                 next_state = self.env.reset()
 
             socket.send(
