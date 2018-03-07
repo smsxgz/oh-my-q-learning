@@ -128,6 +128,7 @@ class EpisodicLifeEnv(gym.Wrapper):
             # once the environment advertises done.
             done = True
         self.lives = lives
+        info['was_real_done'] = self.was_real_done
         return obs, reward, done, info
 
     def reset(self, **kwargs):

@@ -50,17 +50,16 @@ def main(game_name, write_video):
         while True:
             q_value = estimator.predict(sess, [state])
             action = np.argmax(q_value[0])
-            state, reward, done, _ = env.step(action)
+            state, reward, done, info = env.step(action)
             r += reward
             tot += 1
             if done:
-                ale_lives = env.unwrapped.ale.lives()
-                print(ale_lives)
-                if ale_lives == 0 or lives == ale_lives:
+                lives = env.unwrapped.ale.lives()
+                print(lives)
+                if info['was_real_done']:
                     print(tot, r)
                     break
                 else:
-                    lives = ale_lives
                     state = env.reset()
         videoWriter.close()
 
@@ -68,20 +67,17 @@ def main(game_name, write_video):
         res = []
         for i in tqdm(range(50)):
             state = env.reset()
-            lives = env.unwrapped.ale.lives()
             r = 0
             while True:
                 q_value = estimator.predict(sess, [state])
                 action = np.argmax(q_value[0])
-                state, reward, done, _ = env.step(action)
+                state, reward, done, info = env.step(action)
                 r += reward
                 if done:
-                    ale_lives = env.unwrapped.ale.lives()
-                    if ale_lives == 0 or lives == ale_lives:
+                    if info['was_real_done']:
                         res.append(r)
                         break
                     else:
-                        lives = ale_lives
                         state = env.reset()
         print(sum(res) / 50)
 
