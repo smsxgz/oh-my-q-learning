@@ -5,17 +5,9 @@ from util import *
 
 
 class Q_Net(nn.Module):
-    def __init__(self, in_channels=4, num_actions=18, activation=F.relu):
-        """
-        Initialize a deep Q-learning network as described in
-        https://storage.googleapis.com/deepmind-data/assets/papers/DeepMindNature14236Paper.pdf
-        Arguments:
-            in_channels: number of channel of input.
-                i.e The number of most recent frames stacked together as describe in the paper
-            num_actions: number of action-value to output, one-to-one correspondence to action in game.
-        """
+    def __init__(self, num_actions=18, activation=F.relu):
         super(Q_Net, self).__init__()
-        self.conv1 = nn.Conv2d(in_channels, 32, kernel_size=8, stride=4)
+        self.conv1 = nn.Conv2d(4, 32, kernel_size=8, stride=4)
         self.conv2 = nn.Conv2d(32, 64, kernel_size=4, stride=2)
         self.conv3 = nn.Conv2d(64, 64, kernel_size=3, stride=1)
         self.fc4 = nn.Linear(7 * 7 * 64, 512)
@@ -31,12 +23,7 @@ class Q_Net(nn.Module):
 
 
 class Estimator(object):
-    def __init__(
-            self,
-            action_n,
-            lr,
-            update_target_rho=0.01,
-    ):
+    def __init__(self, action_n, lr, update_target_rho=0.01):
         """
         Notes:
             if update_target_rho is 1, we will copy q's parameters to target's
@@ -44,6 +31,7 @@ class Estimator(object):
             like 1000.
         """
         self.activation_fn = F.relu
+        self.update_target_rho = update_target_rho
         self.net = Q_Net(num_actions=action_n, activation=self.activation_fn)
         self.target_net = Q_Net(num_actions=action_n, activation=self.activation_fn)
 
@@ -52,9 +40,7 @@ class Estimator(object):
             self.target_net.cuda()
 
         self.target_update(hard=True)
-
         self.optimizer = optim.Adam(params=self.net.parameters(), lr=lr)
-        self.update_target_rho = update_target_rho
 
     def target_update(self, hard=False):
         params = get_flat_params_from(self.net)
@@ -65,13 +51,12 @@ class Estimator(object):
             new_params = self.update_target_rho * params + (1 - self.update_target_rho) * params_target
             set_flat_params_to(self.target_net, new_params)
 
-    def predict(self, s):
+    def predict(self, s, target=False):
         s = turn_into_cuda(np_to_var(s))
-        return self.net(s).cpu().data.numpy()
-
-    def target_predict(self, s):
-        s = turn_into_cuda(np_to_var(s))
-        return self.target_net(s).cpu().data.numpy()
+        if target:
+            return self.target_net(s).cpu().data.numpy()
+        else:
+            return self.net(s).cpu().data.numpy()
 
     def update(self, s, a, y):
         s = turn_into_cuda(np_to_var(s))
