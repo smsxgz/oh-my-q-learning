@@ -1,3 +1,4 @@
+import numpy as np
 import tensorflow as tf
 
 
@@ -104,11 +105,25 @@ class Estimator(object):
     def predict(self, sess, s):
         return sess.run(self.predictions, {self.X_pl: s})
 
-    def target_predict(self, sess, s):
-        return sess.run(self.target_predictions, {self.X_pl: s})
+    def update(self, sess, discount_factor, states_batch, action_batch,
+               reward_batch, next_states_batch, done_batch):
+        batch_size = states_batch.shape[0]
 
-    def update(self, sess, s, a, y):
-        feed_dict = {self.X_pl: s, self.actions_pl: a, self.y_pl: y}
+        q_values_next, q_values_next_target = sess.run(
+            [self.predictions, self.target_predictions], {
+                self.X_pl: next_states_batch
+            })
+        best_actions = np.argmax(q_values_next, axis=1)
+        discount_factor_batch = np.invert(done_batch).astype(
+            np.float32) * discount_factor
+        targets_batch = reward_batch + discount_factor_batch * \
+            q_values_next_target[np.arange(batch_size), best_actions]
+
+        feed_dict = {
+            self.X_pl: states_batch,
+            self.actions_pl: action_batch,
+            self.y_pl: targets_batch
+        }
 
         return sess.run([
             self.train_op,
@@ -128,4 +143,4 @@ class Estimator(object):
             print("Loading model checkpoint {}...".format(latest_checkpoint))
             self.saver.restore(sess, latest_checkpoint)
         else:
-            print('No model in checkpoint_path!!')
+            print('New start!!')
