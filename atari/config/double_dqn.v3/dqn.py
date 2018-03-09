@@ -48,11 +48,12 @@ def dqn(env,
         checkpoint_path,
         exploration_policy_fn,
         discount_factor=0.99,
-        save_model_every=1000,
         update_target_every=1,
         learning_starts=100,
         memory_size=100000,
-        num_iterations=500000):
+        num_iterations=500000,
+        update_summaries_every=1000,
+        save_model_every=10000):
 
     estimator.restore(checkpoint_path)
 
@@ -97,14 +98,15 @@ def dqn(env,
             if total_t % update_target_every == 0:
                 estimator.target_update()
 
-            if total_t % save_model_every == 0:
+            if total_t % update_summaries_every == 0:
                 t = time.time() - start
-                estimator.save(checkpoint_path)
-                print("Save session, global_step: {}, delta_time: {}.".format(
-                    total_t, t))
-
+                print("global_step: {}, delta_time: {}.".format(total_t, t))
                 results_buffer.add_summary(summary_writer, total_t, t)
                 start = time.time()
+
+            if total_t % save_model_every == 0:
+                estimator.save(checkpoint_path)
+                print("save model...")
 
             states = next_states
 
