@@ -69,7 +69,7 @@ class Distdqn(object):
         actions = np.random.randint(self.n_ac, size=batch_size)
         idx = np.random.uniform(size=batch_size) > self.epsilon
         actions[idx] = best_action[idx]
-        return best_action
+        return actions
 
     def update(self, state_batch, action_batch, reward_batch, next_state_batch, done_batch):
         batch_size = state_batch.shape[0]
