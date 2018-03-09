@@ -9,6 +9,7 @@ from torch.autograd import Variable
 
 USE_CUDA = torch.cuda.is_available()
 FLOAT = torch.cuda.FloatTensor if USE_CUDA else torch.FloatTensor
+INT = torch.cuda.LongTensor if USE_CUDA else torch.LongTensor
 
 
 def to_numpy(var):
@@ -70,8 +71,7 @@ class Estimator(object):
         q_values_next = self.net(to_tensor(next_states_batch))
         _, best_actions = q_values_next.max(1)
 
-        q_values_next_target = self.target_net(
-            to_tensor(next_states_batch))
+        q_values_next_target = self.target_net(to_tensor(next_states_batch))
         discount_factor_batch = discount_factor * to_tensor(
             np.invert(done_batch).astype(np.float32))
         targets_batch = to_tensor(reward_batch) + discount_factor_batch * \
@@ -79,7 +79,7 @@ class Estimator(object):
 
         predictions = self.net(to_tensor(states_batch)).gather(
             1,
-            to_tensor(action_batch).view(-1, 1).long())
+            to_tensor(action_batch, dtype=INT).view(-1, 1))
 
         max_q_value = torch.max(predictions)
         min_q_value = torch.min(predictions)
@@ -106,8 +106,7 @@ class Estimator(object):
                    os.path.join(checkpoint_path, 'model-{}.pkl'.format(
                        self.total_t)))
         self.net.cuda()
-        
-        
+
         self.target_net.cpu()
         torch.save(self.target_net.state_dict(),
                    os.path.join(checkpoint_path, 'target_model-{}.pkl'.format(
@@ -116,7 +115,7 @@ class Estimator(object):
 
         # save total_t
         checkpoints_json_path = os.path.join(checkpoint_path,
-                                              'checkpoints.json')
+                                             'checkpoints.json')
         if os.path.exists(checkpoints_json_path):
             with open(checkpoints_json_path, 'r') as f:
                 checkpoints = json.load(f)
@@ -138,12 +137,12 @@ class Estimator(object):
 
     def restore(self, checkpoint_path):
         checkpoints_json_path = os.path.join(checkpoint_path,
-                                              'checkpoints.json')
+                                             'checkpoints.json')
         if os.path.exists(checkpoints_json_path):
             with open(checkpoints_json_path, 'r') as f:
                 self.total_t = json.load(f)[-1]
             print('restore network from checkpoint {}...'.format(self.total_t))
-            
+
             self.net.load_state_dict(
                 torch.load(
                     os.path.join(checkpoint_path, 'model-{}.pkl'.format(
