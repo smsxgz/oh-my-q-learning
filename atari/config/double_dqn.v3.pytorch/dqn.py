@@ -99,7 +99,7 @@ def dqn(env,
 
             if total_t % save_model_every == 0:
                 t = time.time() - start
-                estimator.save(os.path.join(checkpoint_path, 'model'), total_t)
+                estimator.save(checkpoint_path)
                 print("Save session, global_step: {}, delta_time: {}.".format(
                     total_t, t))
 
@@ -112,7 +112,7 @@ def dqn(env,
         raise e
 
     finally:
-        estimator.save(os.path.join(checkpoint_path, 'model'), total_t)
+        estimator.save(checkpoint_path)
 
         with open(pkl_path, 'wb') as f:
             pickle.dump(results_buffer.rewards_history, f)
