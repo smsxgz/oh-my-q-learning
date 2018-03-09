@@ -76,6 +76,7 @@ class Estimator(object):
             np.invert(done_batch).astype(np.float32))
         targets_batch = to_tensor(reward_batch) + discount_factor_batch * \
             q_values_next_target.gather(1, best_actions.view(-1, 1))
+        targets_batch = targets_batch.detach()
 
         predictions = self.net(to_tensor(states_batch)).gather(
             1,
