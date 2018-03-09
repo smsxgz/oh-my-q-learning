@@ -1,6 +1,9 @@
+import os
+import json
 import torch
 import numpy as np
 import torch.nn.functional as F
+
 from torch import nn
 from torch.autograd import Variable
 
@@ -55,6 +58,7 @@ class Estimator(object):
             self.net.cuda()
             self.target_net.cuda()
 
+        self.total_t = 0
         self.optimizer = torch.optim.Adam(params=self.net.parameters(), lr=lr)
 
     def predict(self, s):
@@ -85,9 +89,9 @@ class Estimator(object):
         self.net.zero_grad()
         loss.backward()
         self.optimizer.step()
-        self.tot += 1
+        self.total_t += 1
 
-        return
+        return self.total_t, summaries
 
     def target_update(self):
         for e2_v, e1_v in zip(self.target_net.parameters(),
@@ -95,8 +99,55 @@ class Estimator(object):
             e2_v.data.copy_(
                 (e1_v.data - e2_v.data) * self.update_target_rho + e2_v.data)
 
-    def save(self):
-        pass
+    def save(self, checkpoint_path):
+        # we can
+        self.actor.cpu()
+        torch.save(self.net.state_dict(),
+                   os.path.join(checkpoint_path, 'model-{}.pkl'.format(
+                       self.total_t)))
+        torch.save(self.target_net.state_dict(),
+                   os.path.join(checkpoint_path, 'target_model-{}.pkl'.format(
+                       self.total_t)))
 
-    def restore(self):
-        pass
+        # save total_t
+        latest_checkpoint_path = os.path.join(checkpoint_path,
+                                              'latest_checkpoint.json')
+        with open(latest_checkpoint_path, 'r') as f:
+            latest_checkpoint = json.load(f)
+
+        # max_to_keep = 50
+        if len(latest_checkpoint) == 50:
+            tot = latest_checkpoint.pop(0)
+            os.remove(
+                os.path.join(checkpoint_path, 'model-{}.pkl'.format(tot)))
+            os.remove(
+                os.path.join(checkpoint_path,
+                             'target_model-{}.pkl'.format(tot)))
+
+        latest_checkpoint.append(self.total_t)
+        with open(latest_checkpoint_path, 'w') as f:
+            json.dump(latest_checkpoint, f)
+
+        self.actor.cuda()
+
+    def restore(self, checkpoint_path):
+        latest_checkpoint_path = os.path.join(checkpoint_path,
+                                              'latest_checkpoint.pkl')
+        if os.path.exists(latest_checkpoint_path):
+            with open(latest_checkpoint_path, 'r') as f:
+                # for line in f.readlines
+                self.total_t = json.load(f)[-1]
+
+            self.net.load_state_dict(
+                torch.load(
+                    os.path.join(checkpoint_path, 'model-{}.pkl'.format(
+                        self.total_t))))
+            self.target_net.load_state_dict(
+                os.path.join(checkpoint_path, 'target_model-{}.pkl'.format(
+                    self.total_t)))
+
+        else:
+            print('New start!!')
+
+    def get_global_step(self):
+        return self.total_t

@@ -138,16 +138,19 @@ class Estimator(object):
             self.y_pl: targets_batch
         }
 
-        return self.sess.run([
+        _, total_t, *summaries = self.sess.run([
             self.train_op,
             tf.train.get_global_step(), self.loss, self.max_q_value,
             self.min_q_value
         ], feed_dict)
+        return total_t, summaries
 
     def target_update(self):
         self.sess.run(self.update_target_op)
 
-    def save(self, checkpoint, total_t):
+    def save(self, checkpoint_path):
+        total_t = self.get_global_step()
+        checkpoint = os.path.join(checkpoint_path, 'model')
         self.saver.save(self.sess, checkpoint, total_t, write_meta_graph=False)
 
     def restore(self, checkpoint_path):

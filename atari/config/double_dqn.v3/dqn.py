@@ -90,7 +90,7 @@ def dqn(env,
                 zip(states, actions, rewards, next_states, dones))
 
             # update
-            _, total_t, *summaries = estimator.update(
+            total_t, summaries = estimator.update(
                 discount_factor, *memory_buffer.sample(batch_size))
             results_buffer.update_summaries(summaries, total_t)
 
@@ -99,7 +99,7 @@ def dqn(env,
 
             if total_t % save_model_every == 0:
                 t = time.time() - start
-                estimator.save(os.path.join(checkpoint_path, 'model'), total_t)
+                estimator.save(checkpoint_path, total_t)
                 print("Save session, global_step: {}, delta_time: {}.".format(
                     total_t, t))
 
