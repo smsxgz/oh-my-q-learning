@@ -68,18 +68,18 @@ class Estimator(object):
     def update(self, discount_factor, states_batch, action_batch, reward_batch,
                next_states_batch, done_batch):
         q_values_next = self.net(to_tensor(next_states_batch))
-        best_actions = q_values_next.max(1)
+        _, best_actions = q_values_next.max(1)
 
         q_values_next_target = self.target_net(
-            to_tensor(next_states_batch, volatile=True))
+            to_tensor(next_states_batch))
         discount_factor_batch = discount_factor * to_tensor(
             np.invert(done_batch).astype(np.float32))
         targets_batch = to_tensor(reward_batch) + discount_factor_batch * \
-            q_values_next_target.gather(1, best_actions.long())
+            q_values_next_target.gather(1, best_actions.view(-1, 1))
 
         predictions = self.net(to_tensor(states_batch)).gather(
             1,
-            to_tensor(action_batch).long())
+            to_tensor(action_batch).view(-1, 1).long())
 
         max_q_value = torch.max(predictions)
         min_q_value = torch.min(predictions)
@@ -101,51 +101,57 @@ class Estimator(object):
                 (e1_v.data - e2_v.data) * self.update_target_rho + e2_v.data)
 
     def save(self, checkpoint_path):
-        # we can
-        self.actor.cpu()
+        self.net.cpu()
         torch.save(self.net.state_dict(),
                    os.path.join(checkpoint_path, 'model-{}.pkl'.format(
                        self.total_t)))
+        self.net.cuda()
+        
+        
+        self.target_net.cpu()
         torch.save(self.target_net.state_dict(),
                    os.path.join(checkpoint_path, 'target_model-{}.pkl'.format(
                        self.total_t)))
+        self.target_net.cuda()
 
         # save total_t
-        latest_checkpoint_path = os.path.join(checkpoint_path,
-                                              'latest_checkpoint.json')
-        with open(latest_checkpoint_path, 'r') as f:
-            latest_checkpoint = json.load(f)
+        checkpoints_json_path = os.path.join(checkpoint_path,
+                                              'checkpoints.json')
+        if os.path.exists(checkpoints_json_path):
+            with open(checkpoints_json_path, 'r') as f:
+                checkpoints = json.load(f)
+        else:
+            checkpoints = []
 
         # max_to_keep = 50
-        if len(latest_checkpoint) == 50:
-            tot = latest_checkpoint.pop(0)
+        if len(checkpoints) == 50:
+            tot = checkpoints.pop(0)
             os.remove(
                 os.path.join(checkpoint_path, 'model-{}.pkl'.format(tot)))
             os.remove(
                 os.path.join(checkpoint_path,
                              'target_model-{}.pkl'.format(tot)))
 
-        latest_checkpoint.append(self.total_t)
-        with open(latest_checkpoint_path, 'w') as f:
-            json.dump(latest_checkpoint, f)
-
-        self.actor.cuda()
+        checkpoints.append(self.total_t)
+        with open(checkpoints_json_path, 'w') as f:
+            json.dump(checkpoints, f)
 
     def restore(self, checkpoint_path):
-        latest_checkpoint_path = os.path.join(checkpoint_path,
-                                              'latest_checkpoint.pkl')
-        if os.path.exists(latest_checkpoint_path):
-            with open(latest_checkpoint_path, 'r') as f:
-                # for line in f.readlines
+        checkpoints_json_path = os.path.join(checkpoint_path,
+                                              'checkpoints.json')
+        if os.path.exists(checkpoints_json_path):
+            with open(checkpoints_json_path, 'r') as f:
                 self.total_t = json.load(f)[-1]
-
+            print('restore network from checkpoint {}...'.format(self.total_t))
+            
             self.net.load_state_dict(
                 torch.load(
                     os.path.join(checkpoint_path, 'model-{}.pkl'.format(
                         self.total_t))))
             self.target_net.load_state_dict(
-                os.path.join(checkpoint_path, 'target_model-{}.pkl'.format(
-                    self.total_t)))
+                torch.load(
+                    os.path.join(checkpoint_path, 'target_model-{}.pkl'.format(
+                        self.total_t))))
 
         else:
             print('New start!!')
