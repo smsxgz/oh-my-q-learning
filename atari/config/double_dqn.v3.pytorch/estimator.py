@@ -53,8 +53,8 @@ class Estimator(object):
         """
         self.activation_fn = F.relu
         self.update_target_rho = update_target_rho
-        self.net = Q_Net(state_shape, action_n, F.relu)
-        self.target_net = Q_Net(state_shape, action_n, F.relu)
+        self.net = Q_Net(state_shape, action_n, self.activation_fn)
+        self.target_net = Q_Net(state_shape, action_n, self.activation_fn)
 
         if USE_CUDA:
             self.net.cuda()
