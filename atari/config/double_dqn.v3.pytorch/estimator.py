@@ -24,7 +24,8 @@ def to_tensor(ndarray, volatile=False, requires_grad=False, dtype=FLOAT):
 
 
 class Q_Net(nn.Module):
-    def __init__(self, action_n, activation):
+    def __init__(self, state_shape, action_n, activation):
+        assert list(state_shape) == [4, 84, 84]
         super(Q_Net, self).__init__()
         self.conv1 = nn.Conv2d(4, 32, kernel_size=8, stride=4)
         self.conv2 = nn.Conv2d(32, 64, kernel_size=4, stride=2)
@@ -42,7 +43,7 @@ class Q_Net(nn.Module):
 
 
 class Estimator(object):
-    def __init__(self, action_n, lr, update_target_rho=0.01):
+    def __init__(self, state_shape, action_n, lr, update_target_rho=0.01):
         """
         Notes:
             if update_target_rho is 1, we will copy q's parameters to target's
@@ -51,8 +52,8 @@ class Estimator(object):
         """
         self.activation_fn = F.relu
         self.update_target_rho = update_target_rho
-        self.net = Q_Net(action_n, F.relu)
-        self.target_net = Q_Net(action_n, F.relu)
+        self.net = Q_Net(state_shape, action_n, F.relu)
+        self.target_net = Q_Net(state_shape, action_n, F.relu)
 
         if USE_CUDA:
             self.net.cuda()
