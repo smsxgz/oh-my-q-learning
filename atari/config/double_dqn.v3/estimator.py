@@ -1,4 +1,9 @@
+import os
 import numpy as np
+
+used_gpu = '0'
+os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"] = used_gpu
 import tensorflow as tf
 
 
@@ -16,12 +21,20 @@ class Estimator(object):
             parameters, and we should set update_target_every to be larger
             like 1000.
         """
+        tf.reset_default_graph()
+        tf.Variable(0, name='global_step', trainable=False)
+
         self.activation_fn = tf.nn.relu
         self.optimizer = tf.train.AdamOptimizer(lr)
         self.update_target_rho = update_target_rho
         self._build_model(state_shape, action_n)
 
         self.saver = tf.train.Saver(max_to_keep=50)
+
+        config = tf.ConfigProto(allow_soft_placement=True)
+        config.gpu_options.allow_growth = True
+        self.sess = tf.Session(config=config)
+        self.sess.run(tf.global_variables_initializer())
 
     def _network(self, X, action_n):
         conv1 = tf.contrib.layers.conv2d(
@@ -102,14 +115,14 @@ class Estimator(object):
             self.target_predictions = self._network(self.X_pl, action_n)
             self.update_target_op = self._get_update_target_op()
 
-    def predict(self, sess, s):
-        return sess.run(self.predictions, {self.X_pl: s})
+    def predict(self, s):
+        return self.sess.run(self.predictions, {self.X_pl: s})
 
-    def update(self, sess, discount_factor, states_batch, action_batch,
-               reward_batch, next_states_batch, done_batch):
+    def update(self, discount_factor, states_batch, action_batch, reward_batch,
+               next_states_batch, done_batch):
         batch_size = states_batch.shape[0]
 
-        q_values_next, q_values_next_target = sess.run(
+        q_values_next, q_values_next_target = self.sess.run(
             [self.predictions, self.target_predictions], {
                 self.X_pl: next_states_batch
             })
@@ -125,22 +138,25 @@ class Estimator(object):
             self.y_pl: targets_batch
         }
 
-        return sess.run([
+        return self.sess.run([
             self.train_op,
             tf.train.get_global_step(), self.loss, self.max_q_value,
             self.min_q_value
         ], feed_dict)
 
-    def target_update(self, sess):
-        sess.run(self.update_target_op)
+    def target_update(self):
+        self.sess.run(self.update_target_op)
 
-    def save(self, sess, checkpoint, total_t):
-        self.saver.save(sess, checkpoint, total_t, write_meta_graph=False)
+    def save(self, checkpoint, total_t):
+        self.saver.save(self.sess, checkpoint, total_t, write_meta_graph=False)
 
-    def restore(self, sess, checkpoint_path):
+    def restore(self, checkpoint_path):
         latest_checkpoint = tf.train.latest_checkpoint(checkpoint_path)
         if latest_checkpoint:
             print("Loading model checkpoint {}...".format(latest_checkpoint))
-            self.saver.restore(sess, latest_checkpoint)
+            self.saver.restore(self.sess, latest_checkpoint)
         else:
             print('New start!!')
+
+    def get_global_step(self):
+        return self.sess.run(tf.train.get_global_step())
