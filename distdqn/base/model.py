@@ -79,6 +79,8 @@ class Distdqn(object):
         ## action batch should be np.int64!!!!!!
         action_batch = action_batch.astype(np.int64)
         q_probs_action_tensor = q_probs_tensor[np.arange(batch_size), action_batch]
+        ## Avoid NAN!!!!
+        q_probs_action_tensor.data.clamp_(0.01, 0.99)
 
         next_state_batch_tensor = Variable(torch.from_numpy(next_state_batch)).type(self.float)
         next_q_logits_tensor = self.qdist(next_state_batch_tensor)
