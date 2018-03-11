@@ -1,7 +1,6 @@
 import os
 import random
 import numpy as np
-import tensorflow as tf
 from collections import deque
 
 
@@ -80,4 +79,8 @@ class Memory(object):
 
     def sample(self, batch_size):
         samples = random.sample(self.mem, batch_size)
-        return map(np.array, zip(*samples))
+        samples = map(np.array, zip(*samples))
+        # state, action, reward, next_state, done
+        samples[0] = samples[0].astype(np.float32) / 255.0
+        samples[3] = samples[3].astype(np.float32) / 255.0
+        return samples

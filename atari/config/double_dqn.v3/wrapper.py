@@ -17,7 +17,6 @@ def atari_env(env_id, skip=4, stack=4):
     if 'FIRE' in env.unwrapped.get_action_meanings():
         env = FireResetEnv(env)
     env = FrameWarpAndStack(env, stack)
-    # env = NormalizedEnv(env)
     return env
 
 
@@ -163,10 +162,10 @@ class FrameWarpAndStack(gym.Wrapper):
         self.height = 84
         self.frames = deque([], maxlen=k)
         self.observation_space = Box(
-            low=0.0,
-            high=1.0,
+            low=0,
+            high=255,
             shape=(k, self.width, self.height),
-            dtype=np.float32)
+            dtype=np.uint8)
 
     def reset(self, **kwargs):
         ob = self.env.reset(**kwargs)
@@ -181,11 +180,10 @@ class FrameWarpAndStack(gym.Wrapper):
 
     def _get_ob(self):
         assert len(self.frames) == self.k
-        return np.array(self.frames).astype(np.float32)
+        return np.array(self.frames).astype(np.uint8)
 
     def _preprocess(self, frame):
         frame = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
         frame = cv2.resize(
             frame, (self.width, self.height), interpolation=cv2.INTER_AREA)
-        frame = frame.astype(np.float32) / 255.0
         return frame
