@@ -68,15 +68,18 @@ class Estimator(object):
 
     def update(self, discount_factor, states_batch, action_batch, reward_batch,
                next_states_batch, done_batch):
-        q_values_next = self.net(to_tensor(next_states_batch))
-        _, best_actions = q_values_next.max(1)
+        batch_size = states_batch.shape[0]
 
-        q_values_next_target = self.target_net(to_tensor(next_states_batch))
-        discount_factor_batch = discount_factor * to_tensor(
-            np.invert(done_batch).astype(np.float32))
-        targets_batch = to_tensor(reward_batch) + discount_factor_batch * \
-            q_values_next_target.gather(1, best_actions.view(-1, 1))
-        targets_batch = targets_batch.detach()
+        q_values_next = to_numpy(self.net(to_tensor(next_states_batch)))
+        best_actions = np.argmax(q_values_next, axis=1)
+
+        q_values_next_target = to_numpy(
+            self.target_net(to_tensor(next_states_batch)))
+        discount_factor_batch = discount_factor * np.invert(done_batch).astype(
+            np.float32)
+        targets_batch = reward_batch + discount_factor_batch * \
+            q_values_next_target[np.arange(batch_size), best_actions]
+        targets_batch = to_tensor(targets_batch).view(-1, 1)
 
         predictions = self.net(to_tensor(states_batch)).gather(
             1,
