@@ -10,6 +10,7 @@
 在Atari上的实验终于接近成功啦！详见 atari/config/double_dqn.v3
 
 安装ffmpeg：
+
 ```bash
 conda install -c conda-forge ffmpeg
 ```
@@ -19,6 +20,7 @@ conda install -c conda-forge ffmpeg
 PongNoFrameSkip-v4成功！
 
 解决pip install 'gym[mujoco]'失败的方法：
+
 ```bash
 git clone https://github.com/openai/mujoco-py.git
 cd mujoco-py
@@ -26,3 +28,7 @@ pip install -r requirements.txt
 pip install -r requirements.dev.txt
 python setup.py install
 ```
+
+2018.3.10
+pytorch版本的estimator终于调试成功啦，曲线也和valid padding版本的tensorflow一致啦!  
+经过细致调研NoFrameskip-v4就是没有其他操作的ALE环境，所以不用特意改代码啦！

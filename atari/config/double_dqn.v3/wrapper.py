@@ -37,27 +37,6 @@ class VisualizeEnv(gym.Wrapper):
         return obs, reward, done, info
 
 
-class NormalizedEnv(gym.ObservationWrapper):
-    def __init__(self, env=None):
-        gym.ObservationWrapper.__init__(self, env)
-        self.state_mean = 0
-        self.state_std = 0
-        self.alpha = 0.9999
-        self.num_steps = 0
-
-    def observation(self, observation):
-        self.num_steps += 1
-        self.state_mean = self.state_mean * self.alpha + \
-            observation.mean() * (1 - self.alpha)
-        self.state_std = self.state_std * self.alpha + \
-            observation.std() * (1 - self.alpha)
-
-        unbiased_mean = self.state_mean / (1 - pow(self.alpha, self.num_steps))
-        unbiased_std = self.state_std / (1 - pow(self.alpha, self.num_steps))
-
-        return (observation - unbiased_mean) / (unbiased_std + 1e-8)
-
-
 class NoopResetEnv(gym.Wrapper):
     def __init__(self, env, noop_max=30):
         """Sample initial states by taking random number of no-ops on reset.
