@@ -37,7 +37,6 @@ def main(game_name):
             models_path,
             policy_fn,
             discount_factor=0.99,
-            save_model_every=1000,
             update_target_every=1000,
             learning_starts=200,
             memory_size=100000,
