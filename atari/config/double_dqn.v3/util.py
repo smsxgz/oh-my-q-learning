@@ -79,7 +79,7 @@ class Memory(object):
 
     def sample(self, batch_size):
         samples = random.sample(self.mem, batch_size)
-        samples = map(np.array, zip(*samples))
+        samples = list(map(np.array, zip(*samples)))
         # state, action, reward, next_state, done
         samples[0] = samples[0].astype(np.float32) / 255.0
         samples[3] = samples[3].astype(np.float32) / 255.0
