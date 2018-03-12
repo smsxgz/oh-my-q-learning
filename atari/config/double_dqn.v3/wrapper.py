@@ -17,7 +17,6 @@ def atari_env(env_id, skip=4, stack=4):
     if 'FIRE' in env.unwrapped.get_action_meanings():
         env = FireResetEnv(env)
     env = FrameWarpAndStack(env, stack)
-    # env = NormalizedEnv(env)
     return env
 
 
@@ -35,27 +34,6 @@ class VisualizeEnv(gym.Wrapper):
         if self.videowriter is not None:
             self.videowriter.append_data(obs)
         return obs, reward, done, info
-
-
-class NormalizedEnv(gym.ObservationWrapper):
-    def __init__(self, env=None):
-        gym.ObservationWrapper.__init__(self, env)
-        self.state_mean = 0
-        self.state_std = 0
-        self.alpha = 0.9999
-        self.num_steps = 0
-
-    def observation(self, observation):
-        self.num_steps += 1
-        self.state_mean = self.state_mean * self.alpha + \
-            observation.mean() * (1 - self.alpha)
-        self.state_std = self.state_std * self.alpha + \
-            observation.std() * (1 - self.alpha)
-
-        unbiased_mean = self.state_mean / (1 - pow(self.alpha, self.num_steps))
-        unbiased_std = self.state_std / (1 - pow(self.alpha, self.num_steps))
-
-        return (observation - unbiased_mean) / (unbiased_std + 1e-8)
 
 
 class NoopResetEnv(gym.Wrapper):
@@ -184,10 +162,10 @@ class FrameWarpAndStack(gym.Wrapper):
         self.height = 84
         self.frames = deque([], maxlen=k)
         self.observation_space = Box(
-            low=0.0,
-            high=1.0,
+            low=0,
+            high=255,
             shape=(k, self.width, self.height),
-            dtype=np.float32)
+            dtype=np.uint8)
 
     def reset(self, **kwargs):
         ob = self.env.reset(**kwargs)
@@ -202,11 +180,10 @@ class FrameWarpAndStack(gym.Wrapper):
 
     def _get_ob(self):
         assert len(self.frames) == self.k
-        return np.array(self.frames).astype(np.float32)
+        return np.array(self.frames).astype(np.uint8)
 
     def _preprocess(self, frame):
         frame = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
         frame = cv2.resize(
             frame, (self.width, self.height), interpolation=cv2.INTER_AREA)
-        frame = frame.astype(np.float32) / 255.0
         return frame

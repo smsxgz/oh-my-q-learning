@@ -2,7 +2,6 @@ import os
 import time
 import pickle
 import numpy as np
-import tensorflow as tf
 from util import Memory
 from collections import defaultdict
 
@@ -42,21 +41,21 @@ class ResultsBuffer(object):
             summary_writer.add_scalar(key, s[key], total_t)
 
 
-def dqn(sess,
-        env,
+def dqn(env,
         estimator,
         batch_size,
         summary_writer,
         checkpoint_path,
         exploration_policy_fn,
         discount_factor=0.99,
-        save_model_every=1000,
         update_target_every=1,
         learning_starts=100,
         memory_size=100000,
-        num_iterations=500000):
+        num_iterations=500000,
+        update_summaries_every=1000,
+        save_model_every=10000):
 
-    estimator.restore(sess, checkpoint_path)
+    estimator.restore(checkpoint_path)
 
     rewards_history = []
     pkl_path = 'train_log/{}/rewards.pkl'.format(env.game_name)
@@ -64,7 +63,7 @@ def dqn(sess,
         with open(pkl_path, 'rb') as f:
             rewards_history = pickle.load(f)
 
-    total_t = sess.run(tf.train.get_global_step())
+    total_t = estimator.get_global_step()
 
     memory_buffer = Memory(memory_size)
     results_buffer = ResultsBuffer(rewards_history)
@@ -72,7 +71,7 @@ def dqn(sess,
     try:
         states = env.reset()
         for i in range(learning_starts):
-            q_values = estimator.predict(sess, states)
+            q_values = estimator.predict(states)
             actions = exploration_policy_fn(q_values, total_t)
             next_states, rewards, dones, _ = env.step(actions)
 
@@ -83,7 +82,7 @@ def dqn(sess,
         states = env.reset()
         start = time.time()
         for i in range(num_iterations):
-            q_values = estimator.predict(sess, states)
+            q_values = estimator.predict(states)
             actions = exploration_policy_fn(q_values, total_t)
             next_states, rewards, dones, info = env.step(actions)
 
@@ -92,22 +91,22 @@ def dqn(sess,
                 zip(states, actions, rewards, next_states, dones))
 
             # update
-            _, total_t, *summaries = estimator.update(
-                sess, discount_factor, *memory_buffer.sample(batch_size))
+            total_t, summaries = estimator.update(
+                discount_factor, *memory_buffer.sample(batch_size))
             results_buffer.update_summaries(summaries, total_t)
 
             if total_t % update_target_every == 0:
-                estimator.target_update(sess)
+                estimator.target_update()
 
-            if total_t % save_model_every == 0:
+            if total_t % update_summaries_every == 0:
                 t = time.time() - start
-                estimator.save(sess, os.path.join(checkpoint_path, 'model'),
-                               total_t)
-                print("Save session, global_step: {}, delta_time: {}.".format(
-                    total_t, t))
-
+                print("global_step: {}, delta_time: {}.".format(total_t, t))
                 results_buffer.add_summary(summary_writer, total_t, t)
                 start = time.time()
+
+            if total_t % save_model_every == 0:
+                estimator.save(checkpoint_path)
+                print("save model...")
 
             states = next_states
 
@@ -115,7 +114,7 @@ def dqn(sess,
         raise e
 
     finally:
-        estimator.save(sess, os.path.join(checkpoint_path, 'model'), total_t)
+        estimator.save(checkpoint_path)
 
         with open(pkl_path, 'wb') as f:
             pickle.dump(results_buffer.rewards_history, f)

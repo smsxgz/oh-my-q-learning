@@ -38,21 +38,29 @@ class Estimator(object):
 
     def _network(self, X, action_n):
         conv1 = tf.contrib.layers.conv2d(
-            X, 32, 8, 4, data_format='NCHW', activation_fn=self.activation_fn)
+            X,
+            32,
+            8,
+            4,
+            data_format='NCHW',
+            activation_fn=self.activation_fn,
+            padding='VALID')
         conv2 = tf.contrib.layers.conv2d(
             conv1,
             64,
             4,
             2,
             data_format='NCHW',
-            activation_fn=self.activation_fn)
+            activation_fn=self.activation_fn,
+            padding='VALID')
         conv3 = tf.contrib.layers.conv2d(
             conv2,
             64,
             3,
             1,
             data_format='NCHW',
-            activation_fn=self.activation_fn)
+            activation_fn=self.activation_fn,
+            padding='VALID')
         # Fully connected layers
         flattened = tf.contrib.layers.flatten(conv3)
         fc1 = tf.contrib.layers.fully_connected(
