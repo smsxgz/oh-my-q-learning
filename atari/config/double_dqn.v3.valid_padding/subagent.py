@@ -56,6 +56,7 @@ class SubAgent(object):
         while True:
             action = socket.recv()
             if action == b'reset':
+                self.env.seed()
                 state = self.env.reset()
                 game_info = GameInfo()
                 socket.send(msgpack.dumps(state))
@@ -73,6 +74,7 @@ class SubAgent(object):
             info = {}
             if done:
                 info = game_info.get(origin_info)
+                self.env.seed()
                 next_state = self.env.reset()
 
             socket.send(

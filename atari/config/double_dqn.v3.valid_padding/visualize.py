@@ -35,7 +35,7 @@ def main(game_name, write_video):
         r = 0
         tot = 0
         while True:
-            q_value = estimator.predict([state])
+            q_value = estimator.predict(np.array([state]))
             action = np.argmax(q_value[0])
             state, reward, done, info = env.step(action)
             r += reward
@@ -50,13 +50,14 @@ def main(game_name, write_video):
                     state = env.reset()
         videoWriter.close()
 
-    def evaluate():
+    def evaluate(num_eval=50):
         res = []
-        for i in tqdm(range(50)):
+        for i in tqdm(range(num_eval)):
+            env.seed()
             state = env.reset()
             r = 0
             while True:
-                q_value = estimator.predict([state])
+                q_value = estimator.predict(np.array([state]))
                 action = np.argmax(q_value[0])
                 state, reward, done, info = env.step(action)
                 r += reward
@@ -66,7 +67,7 @@ def main(game_name, write_video):
                         break
                     else:
                         state = env.reset()
-        print(sum(res) / 50)
+        print('mean: {}, max: {}'.format(sum(res) / num_eval, max(res)))
 
     if write_video:
         print('Writing video ...')
