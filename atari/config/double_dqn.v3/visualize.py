@@ -4,11 +4,6 @@ import imageio
 import numpy as np
 from tqdm import tqdm
 
-used_gpu = '0'
-os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] = used_gpu
-import tensorflow as tf
-
 from util import train_path
 from wrapper import atari_env
 from estimator import Estimator
@@ -20,25 +15,17 @@ from estimator import Estimator
 def main(game_name, write_video):
     env = atari_env(game_name)
 
-    tf.Variable(0, name='global_step', trainable=False)
     estimator = Estimator(
         env.observation_space.shape,
         env.action_space.n,
         1e-4,
         update_target_rho=1.0)
 
-    config = tf.ConfigProto(allow_soft_placement=True)
-    config.gpu_options.allow_growth = True
-    sess = tf.Session(config=config)
-    sess.run(tf.global_variables_initializer())
-
-    saver = tf.train.Saver()
     checkpoint_path = os.path.join(train_path, game_name, 'models')
-    latest_checkpoint = tf.train.latest_checkpoint(checkpoint_path)
-    saver.restore(sess, latest_checkpoint)
+    estimator.restore(checkpoint_path)
 
     def visualize():
-        total_t = sess.run(tf.train.get_global_step())
+        total_t = estimator.get_global_step()
         videoWriter = imageio.get_writer(
             'train_log/{}-{}.mp4'.format(game_name, total_t), fps=30)
 
@@ -48,7 +35,7 @@ def main(game_name, write_video):
         r = 0
         tot = 0
         while True:
-            q_value = estimator.predict(sess, [state])
+            q_value = estimator.predict([state])
             action = np.argmax(q_value[0])
             state, reward, done, info = env.step(action)
             r += reward
@@ -69,7 +56,7 @@ def main(game_name, write_video):
             state = env.reset()
             r = 0
             while True:
-                q_value = estimator.predict(sess, [state])
+                q_value = estimator.predict([state])
                 action = np.argmax(q_value[0])
                 state, reward, done, info = env.step(action)
                 r += reward
