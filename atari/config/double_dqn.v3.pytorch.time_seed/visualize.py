@@ -1,4 +1,5 @@
 import os
+import time
 import click
 import imageio
 import numpy as np
@@ -53,7 +54,7 @@ def main(game_name, write_video):
     def evaluate(num_eval=50):
         res = []
         for i in tqdm(range(num_eval)):
-            env.seed()
+            env.seed(int(time.time() * 1000) // 2147483647)
             state = env.reset()
             r = 0
             while True:
