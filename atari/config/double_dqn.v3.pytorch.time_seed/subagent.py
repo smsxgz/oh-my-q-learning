@@ -75,14 +75,15 @@ class SubAgent(object):
             info = {}
             if done:
                 info = game_info.get(origin_info)
-                self.seed()
+                if origin_info['was_real_done']:
+                    self.seed()
                 next_state = self.env.reset()
 
             socket.send(
                 msgpack.dumps((next_state, np.sign(reward), done, info)))
 
     def seed(self):
-        self.env.seed(int(time.time() * 1000) // 2147483647)
+        self.env.seed(int(time.time() * 1000) % 2147483647)
 
 
 @click.command()
