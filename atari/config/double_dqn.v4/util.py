@@ -22,17 +22,17 @@ def make_train_path(train_prefix=None):
 
     if not os.path.exists(pre_train_path):
         os.makedirs(pre_train_path)
+
     make_soft_link(pre_train_path, train_path)
     return train_path
 
 
 def make_soft_link(base_path, path):
-    if not os.path.exists(path):
-        os.system('ln -s {} {}'.format(base_path, path))
-    elif os.path.realpath(path) != os.path.realpath(base_path):
+    try:
         os.system('rm {}'.format(path))
-        os.system('ln -s {} {}'.format(base_path, path))
-
+    except Exception:
+        pass
+    os.system('ln -s {} {}'.format(base_path, path))
 
 train_path = make_train_path('/data1/xie_atari_train_logs')
 

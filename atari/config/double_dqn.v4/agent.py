@@ -13,7 +13,7 @@ class Agent(object):
 
     def __init__(self, num_agents, game_name, basename):
         self.game_name = game_name
-        path = './.ipc/{}'.format(game_name)
+        path = './.ipc/{}'.format(basename)
         if os.path.exists(path):
             os.system('rm {} -rf'.format(path))
         os.makedirs(path)
@@ -22,7 +22,7 @@ class Agent(object):
         command = 'python subagent.py --game_name {} --basename {}'.format(
             game_name, basename)
         for i in range(num_agents):
-            os.system(command + ' --indentity {}'.format(i))
+            os.system(command + ' --identity {}&'.format(i))
 
         url = 'ipc://./.ipc/{}/Agent.ipc'.format(basename)
         self.context = zmq.Context()
