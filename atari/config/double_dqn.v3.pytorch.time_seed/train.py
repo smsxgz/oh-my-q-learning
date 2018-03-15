@@ -13,7 +13,8 @@ from estimator import Estimator
 @click.command()
 @click.option('--game_name', prompt='game name ')
 @click.option('--basename', default=None)
-def main(game_name, basename):
+@click.option('--lr', default=1e-4)
+def main(game_name, basename, lr):
     assert 'NoFrameskip-v4' in game_name
 
     if basename is None:
@@ -35,7 +36,7 @@ def main(game_name, basename):
 
     env = Agent(32, game_name)
     estimator = Estimator(
-        env.state_shape, env.action_n, 1e-4, update_target_rho=1.0)
+        env.state_shape, env.action_n, lr, update_target_rho=1.0)
 
     try:
         dqn(env,
