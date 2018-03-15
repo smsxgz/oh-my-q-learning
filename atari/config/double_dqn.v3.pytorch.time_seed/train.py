@@ -34,7 +34,7 @@ def main(game_name, basename, lr):
 
     policy_fn = EpsilonGreedy(0.5, 0.01, 625000, summary_writer)
 
-    env = Agent(32, game_name)
+    env = Agent(32, game_name, basename)
     estimator = Estimator(
         env.state_shape, env.action_n, lr, update_target_rho=1.0)
 

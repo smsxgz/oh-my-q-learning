@@ -11,7 +11,7 @@ msgpack_numpy.patch()
 class Agent(object):
     """Control agents' threads."""
 
-    def __init__(self, num_agents, game_name):
+    def __init__(self, num_agents, game_name, basename):
         self.game_name = game_name
         path = './.ipc/{}'.format(game_name)
         if os.path.exists(path):
@@ -19,12 +19,12 @@ class Agent(object):
         os.makedirs(path)
 
         self.num_agents = num_agents
+        command = 'python subagent.py --game_name {} --basename {}'.format(
+            game_name, basename)
         for i in range(num_agents):
-            os.system(
-                'python subagent.py --game_name {} --identity {} &'.format(
-                    game_name, i))
+            os.system(command + ' --indentity {}'.format(i))
 
-        url = 'ipc://./.ipc/{}/Agent.ipc'.format(game_name)
+        url = 'ipc://./.ipc/{}/Agent.ipc'.format(basename)
         self.context = zmq.Context()
         self.agent_socket = self.context.socket(zmq.ROUTER)
         self.agent_socket.bind(url)

@@ -90,9 +90,10 @@ class SubAgent(object):
 @click.command()
 @click.option('--game_name')
 @click.option('--identity')
-def main(game_name, identity):
+@click.option('--basename')
+def main(game_name, identity, basename):
     s = SubAgent(game_name, identity,
-                 'ipc://./.ipc/{}/Agent.ipc'.format(game_name))
+                 'ipc://./.ipc/{}/Agent.ipc'.format(basename))
     s.run()
 
 
