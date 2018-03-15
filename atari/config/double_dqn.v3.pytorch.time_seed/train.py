@@ -12,12 +12,20 @@ from estimator import Estimator
 
 @click.command()
 @click.option('--game_name', prompt='game name ')
-def main(game_name):
-    events_path = os.path.join(train_path, game_name, 'events')
+@click.option('--basename', default=None)
+def main(game_name, basename):
+    assert 'NoFrameskip-v4' in game_name
+
+    if basename is None:
+        basename = game_name[:-14]
+    else:
+        basename = '{}-{}'.format(game_name[:-14], basename)
+
+    events_path = os.path.join(train_path, basename, 'events')
     if not os.path.exists(events_path):
         os.makedirs(events_path)
 
-    models_path = os.path.join(train_path, game_name, 'models')
+    models_path = os.path.join(train_path, basename, 'models')
     if not os.path.exists(models_path):
         os.makedirs(models_path)
 

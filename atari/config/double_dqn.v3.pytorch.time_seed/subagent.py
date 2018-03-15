@@ -83,7 +83,8 @@ class SubAgent(object):
                 msgpack.dumps((next_state, np.sign(reward), done, info)))
 
     def seed(self):
-        self.env.unwrapped.ale.setInt(b'random_seed', int(time.time() * 1000) % 2147483647)
+        self.env.unwrapped.ale.setInt(b'random_seed',
+                                      int(time.time() * 1000) % 2147483647)
 
 
 @click.command()
