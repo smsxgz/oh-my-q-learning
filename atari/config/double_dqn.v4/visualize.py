@@ -14,6 +14,7 @@ from estimator import Estimator
 @click.option('--game_name')
 @click.option('--write_video', is_flag=True)
 def main(game_name, write_video):
+    assert 'NoFrameskip-v4' in game_name
     env = atari_env(game_name)
 
     estimator = Estimator(
@@ -22,13 +23,18 @@ def main(game_name, write_video):
         1e-4,
         update_target_rho=1.0)
 
-    checkpoint_path = os.path.join(train_path, game_name, 'models')
-    estimator.restore(checkpoint_path)
+    basename_list = [
+        name for name in os.listdir(train_path) if game_name[:-14] in name
+    ]
+    print(basename_list)
 
-    def visualize():
+    def visualize(basename):
+        checkpoint_path = os.path.join(train_path, basename, 'models')
+        estimator.restore(checkpoint_path)
+
         total_t = estimator.get_global_step()
         videoWriter = imageio.get_writer(
-            'train_log/{}-{}.mp4'.format(game_name, total_t), fps=30)
+            'train_log/{}-{}.mp4'.format(basename, total_t), fps=30)
 
         state = env.reset(videowriter=videoWriter)
         lives = env.unwrapped.ale.lives()
@@ -51,7 +57,10 @@ def main(game_name, write_video):
                     state = env.reset()
         videoWriter.close()
 
-    def evaluate(num_eval=50):
+    def evaluate(basename, num_eval=50):
+        checkpoint_path = os.path.join(train_path, basename, 'models')
+        estimator.restore(checkpoint_path)
+
         res = []
         for i in tqdm(range(num_eval)):
             env.seed(int(time.time() * 1000) // 2147483647)
@@ -71,11 +80,13 @@ def main(game_name, write_video):
         print('mean: {}, max: {}'.format(sum(res) / num_eval, max(res)))
 
     if write_video:
-        print('Writing video ...')
-        visualize()
+        for basename in basename_list:
+            print("Writing {}'s video ...".format(basename))
+            visualize(basename)
     else:
-        print('Evaluating ...')
-        evaluate()
+        for basename in basename_list:
+            print("Evaluating {} ...".format(basename))
+            evaluate(basename)
 
 
 if __name__ == '__main__':
