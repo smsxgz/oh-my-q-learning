@@ -40,6 +40,7 @@ def main(game_name, basename, lr):
 
     try:
         dqn(env,
+            basename,
             estimator,
             32,
             summary_writer,
