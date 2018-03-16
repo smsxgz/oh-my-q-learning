@@ -1,4 +1,5 @@
 import zmq
+import time
 import click
 import msgpack
 import numpy as np
@@ -56,6 +57,7 @@ class SubAgent(object):
         while True:
             action = socket.recv()
             if action == b'reset':
+                self.seed()
                 state = self.env.reset()
                 game_info = GameInfo()
                 socket.send(msgpack.dumps(state))
@@ -73,11 +75,15 @@ class SubAgent(object):
             info = {}
             if done:
                 info = game_info.get(origin_info)
+                if origin_info['was_real_done']:
+                    self.seed()
                 next_state = self.env.reset()
 
             socket.send(
                 msgpack.dumps((next_state, np.sign(reward), done, info)))
 
+    def seed(self):
+        self.env.unwrapped.ale.setInt(b'random_seed', int(time.time() * 1000) % 2147483647)
 
 @click.command()
 @click.option('--game_name')

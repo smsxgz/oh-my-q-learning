@@ -27,5 +27,5 @@ class qnet(nn.Module):
 if __name__ == '__main__':
     import numpy as np
     from torch.autograd import Variable
-    a = np.arange(10)
+    a = qnet(10, 51)
     from IPython import embed; embed()

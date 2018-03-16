@@ -3,12 +3,12 @@ import os
 import torch 
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.optim import Adam
+from torch.optim import Adam, RMSprop
 from torch.autograd import Variable
 from network import qnet
 
 class Distdqn(object):
-    def __init__(self, n_ac, n_atoms, discount=0.98, epsilon=0.05, vmax=10, vmin=-10, lr=1e-4, use_cuda=False):
+    def __init__(self, n_ac, n_atoms, discount=0.99, epsilon=0.05, vmax=10, vmin=-10, lr=1e-4, use_cuda=False):
         self.n_ac = n_ac
         self.n_atoms = n_atoms
         self.discount = discount
@@ -23,6 +23,7 @@ class Distdqn(object):
         self.qdist = qnet(n_ac, n_atoms)
         self.qdist_target = qnet(n_ac, n_atoms)
         self.optimizer = Adam(self.qdist.parameters(), lr=lr)
+        #self.optimizer = RMSprop(self.qdist.parameters(), lr=lr, alpha=0.95, eps=0.01)
 
         # init qnet and target qnet
         self.update_target()
@@ -56,9 +57,9 @@ class Distdqn(object):
             param_target.data.copy_(param.data)
 
     def get_action(self, obs):
-        x = Variable(torch.from_numpy(obs)).type(self.float)
+        x = Variable(torch.from_numpy(obs), volatile=True).type(self.float)
         logits = self.qdist(x)
-        probs_tensor = torch.stack(list(map(nn.Softmax(), logits.chunk(self.n_ac, 1))), 1)
+        probs_tensor = torch.stack(list(map(nn.Softmax(dim=1), logits.chunk(self.n_ac, 1))), 1)
         if self.use_cuda:
             probs = probs_tensor.cpu().data.numpy()
         else:
@@ -75,16 +76,15 @@ class Distdqn(object):
         batch_size = state_batch.shape[0]
         state_batch_tensor = Variable(torch.from_numpy(state_batch)).type(self.float)
         q_logits_tensor = self.qdist(state_batch_tensor)
-        q_probs_tensor = torch.stack(list(map(nn.Softmax(), q_logits_tensor.chunk(self.n_ac, 1))), 1)
+        q_probs_tensor = torch.stack(list(map(nn.Softmax(dim=1), q_logits_tensor.chunk(self.n_ac, 1))), 1)
         ## action batch should be np.int64!!!!!!
         action_batch = action_batch.astype(np.int64)
         q_probs_action_tensor = q_probs_tensor[np.arange(batch_size), action_batch]
-        ## Avoid NAN!!!!
-        q_probs_action_tensor.data.clamp_(0.01, 0.99)
+        q_probs_action_tensor.data.clamp_(0.0001,0.9999)
 
-        next_state_batch_tensor = Variable(torch.from_numpy(next_state_batch)).type(self.float)
+        next_state_batch_tensor = Variable(torch.from_numpy(next_state_batch), volatile=True).type(self.float)
         next_q_logits_tensor = self.qdist(next_state_batch_tensor)
-        next_q_probs_tensor = torch.stack(list(map(nn.Softmax(), next_q_logits_tensor.chunk(self.n_ac, 1))), 1)
+        next_q_probs_tensor = torch.stack(list(map(nn.Softmax(dim=1), next_q_logits_tensor.chunk(self.n_ac, 1))), 1)
         if self.use_cuda:
             next_q_probs = next_q_probs_tensor.cpu().data.numpy()
         else:
@@ -96,12 +96,12 @@ class Distdqn(object):
         for reward, probs, done in zip(reward_batch, next_q_probs[np.arange(batch_size), best_action], done_batch):
             targets.append(self.calc_dist(reward, self.discount * (1 - done), probs))
         targets = np.array(targets)
-        targets_tensor = Variable(torch.from_numpy(targets)).type(self.float)
+        targets_tensor = Variable(torch.from_numpy(targets), requires_grad=False).type(self.float)
         self.qdist.zero_grad()
         entropy_loss = - torch.mean(torch.sum(targets_tensor * torch.log(q_probs_action_tensor), 1))
         entropy_loss.backward()
         self.optimizer.step()
-        return entropy_loss
+        return entropy_loss.data[0]
     
     def eval(self):
         # for BN
