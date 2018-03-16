@@ -42,6 +42,7 @@ class ResultsBuffer(object):
 
 
 def dqn(env,
+        basename,
         estimator,
         batch_size,
         summary_writer,
@@ -58,7 +59,7 @@ def dqn(env,
     estimator.restore(checkpoint_path)
 
     rewards_history = []
-    pkl_path = 'train_log/{}/rewards.pkl'.format(env.game_name)
+    pkl_path = 'train_log/{}/rewards.pkl'.format(basename)
     if os.path.exists(pkl_path):
         with open(pkl_path, 'rb') as f:
             rewards_history = pickle.load(f)
