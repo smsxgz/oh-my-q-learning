@@ -83,7 +83,7 @@ class Distdqn(object):
         q_probs_action_tensor.data.clamp_(0.0001,0.9999)
 
         next_state_batch_tensor = Variable(torch.from_numpy(next_state_batch), volatile=True).type(self.float)
-        next_q_logits_tensor = self.qdist(next_state_batch_tensor)
+        next_q_logits_tensor = self.qdist_target(next_state_batch_tensor)
         next_q_probs_tensor = torch.stack(list(map(nn.Softmax(dim=1), next_q_logits_tensor.chunk(self.n_ac, 1))), 1)
         if self.use_cuda:
             next_q_probs = next_q_probs_tensor.cpu().data.numpy()
