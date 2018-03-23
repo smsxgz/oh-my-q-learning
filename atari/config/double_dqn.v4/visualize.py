@@ -33,8 +33,10 @@ def main(game_name, write_video):
         estimator.restore(checkpoint_path)
 
         total_t = estimator.get_global_step()
+        if not os.path.exists('./videos'):
+            os.makedirs('./videos')
         videoWriter = imageio.get_writer(
-            'train_log/{}-{}.mp4'.format(basename, total_t), fps=30)
+            './videos/{}-{}.mp4'.format(basename, total_t), fps=30)
 
         state = env.reset(videowriter=videoWriter)
         lives = env.unwrapped.ale.lives()

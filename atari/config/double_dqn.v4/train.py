@@ -13,7 +13,7 @@ from estimator import Estimator
 @click.command()
 @click.option('--game_name', prompt='game name ')
 @click.option('--basename', default=None)
-@click.option('--lr', default=1e-4)
+@click.option('--lr', default=6.25e-5)
 def main(game_name, basename, lr):
     assert 'NoFrameskip-v4' in game_name
 
