@@ -16,7 +16,7 @@ from estimator import Estimator
 @click.option('--lr', type=float, default=6.25e-5)
 @click.option('--update_target_every', type=int, default=10000)
 @click.option('--update_target_rho', type=float, default=1.0)
-def main(game_name, basename, lr, update_target_every, update_target_rho, memory_size):
+def main(game_name, basename, lr, update_target_every, update_target_rho):
     assert 'NoFrameskip-v4' in game_name
 
     if basename is None:
@@ -34,7 +34,7 @@ def main(game_name, basename, lr, update_target_every, update_target_rho, memory
 
     summary_writer = SummaryWriter(events_path)
 
-    policy_fn = EpsilonGreedy(0.5, 0.01, 625000, summary_writer)
+    policy_fn = EpsilonGreedy(0.05, 0.05, 10, summary_writer)
 
     env = Agent(32, game_name, basename)
     estimator = Estimator(env.state_shape, env.action_n, lr, update_target_rho)
@@ -50,7 +50,7 @@ def main(game_name, basename, lr, update_target_every, update_target_rho, memory
             discount_factor=0.99,
             update_target_every=update_target_every,
             learning_starts=200,
-            memory_size=100000,
+            memory_size=500000,
             num_iterations=6250000)
     except KeyboardInterrupt:
         print("\nKeyboard interrupt!!")

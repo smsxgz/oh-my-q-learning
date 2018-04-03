@@ -34,7 +34,7 @@ def main(game_name, basename, lr, update_target_every, update_target_rho):
 
     summary_writer = SummaryWriter(events_path)
 
-    policy_fn = EpsilonGreedy(0.5, 0.01, 625000, summary_writer)
+    policy_fn = EpsilonGreedy(0.05, 0.05, 10, summary_writer)
 
     env = Agent(32, game_name, basename)
     estimator = Estimator(env.state_shape, env.action_n, lr, update_target_rho)
@@ -50,7 +50,7 @@ def main(game_name, basename, lr, update_target_every, update_target_rho):
             discount_factor=0.99,
             update_target_every=update_target_every,
             learning_starts=200,
-            memory_size=100000,
+            memory_size=500000,
             num_iterations=6250000)
     except KeyboardInterrupt:
         print("\nKeyboard interrupt!!")
