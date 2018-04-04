@@ -110,7 +110,7 @@ class Estimator(object):
         best_actions = np.argmax(q_values_next, axis=1)
 
         q_values_next_target_1 = to_numpy(self.target_net_1(to_tensor(next_states_batch, volatile=True)))
-        q_values_next_target_2 = to_numpy(self.target_net_1(to_tensor(next_states_batch, volatile=True)))
+        q_values_next_target_2 = to_numpy(self.target_net_2(to_tensor(next_states_batch, volatile=True)))
         discount_factor_batch = discount_factor * np.invert(done_batch).astype(np.float32)
         targets_batch_1 = reward_batch + discount_factor_batch * q_values_next_target_1[np.arange(batch_size), best_actions]
         targets_batch_2 = reward_batch + discount_factor_batch * q_values_next_target_2[np.arange(batch_size), best_actions]

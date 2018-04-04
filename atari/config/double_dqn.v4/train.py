@@ -14,9 +14,9 @@ from estimator import Estimator
 @click.option('--game_name', prompt='game name ')
 @click.option('--basename', default=None)
 @click.option('--lr', type=float, default=6.25e-5)
-@click.option('--update_target_every', type=int, default=10000)
+@click.option('--update_target_every', type=int, default=1000)
 @click.option('--update_target_rho', type=float, default=1.0)
-def main(game_name, basename, lr, update_target_every, update_target_rho, memory_size):
+def main(game_name, basename, lr, update_target_every, update_target_rho):
     assert 'NoFrameskip-v4' in game_name
 
     if basename is None:
