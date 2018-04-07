@@ -19,10 +19,10 @@ class Agent(object):
         os.makedirs(path)
 
         self.num_agents = num_agents
-        command = 'python subagent.py --game_name {} --basename {}'.format(
+        command = 'python3 subagent.py --game_name {} --basename {}'.format(
             game_name, basename)
         for i in range(num_agents):
-            os.system(command + ' --identity {}&'.format(i))
+            os.system(command + ' --identity {} &'.format(i))
 
         url = 'ipc://./.ipc/{}/Agent.ipc'.format(basename)
         self.context = zmq.Context()

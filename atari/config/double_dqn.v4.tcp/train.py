@@ -11,7 +11,9 @@ from model import Doubledqn
 @click.option('--game_name', prompt='game name:')
 @click.option('--lr', type=float, default=0.0000625)
 @click.option('--basename', default='')
-def main(game_name, basename, lr):
+@click.option('--port', type=int, default=7878)
+@click.option('--num_agents', type=int, default=32)
+def main(game_name, basename, lr, port, num_agents):
     assert 'NoFrameskip-v4' in game_name
 
     tmp = [game_name[:-14], str(lr)]
@@ -20,7 +22,7 @@ def main(game_name, basename, lr):
     basename = ':'.join(tmp)
     base_path = os.path.join(train_path, basename)
 
-    env = Agent(32, game_name, basename)
+    env = Agent(num_agents, game_name, port)
     model = Doubledqn(env.action_n, epsilon=0.05, lr=lr)
     try:
         print("start training!!")

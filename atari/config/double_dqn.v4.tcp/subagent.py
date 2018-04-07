@@ -90,10 +90,9 @@ class SubAgent(object):
 @click.command()
 @click.option('--game_name')
 @click.option('--identity')
-@click.option('--basename')
-def main(game_name, identity, basename):
-    s = SubAgent(game_name, identity,
-                 'ipc://./.ipc/{}/Agent.ipc'.format(basename))
+@click.option('--port')
+def main(game_name, identity, port):
+    s = SubAgent(game_name, identity, "tcp://0.0.0.0:{}".format(port))
     s.run()
 
 

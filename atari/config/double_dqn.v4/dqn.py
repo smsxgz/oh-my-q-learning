@@ -4,12 +4,12 @@ import pickle
 import numpy as np
 from util import Memory
 from collections import defaultdict
+from tensorboardX import SummaryWriter
 
 
 class ResultsBuffer(object):
     def __init__(self, rewards_history=[]):
         self.buffer = defaultdict(list)
-
         assert isinstance(rewards_history, list)
         self.rewards_history = rewards_history
 
@@ -24,11 +24,9 @@ class ResultsBuffer(object):
                 self.rewards_history.append(
                     [total_t, key, msg[b'real_reward']])
 
-    def update_summaries(self, summaries, total_t):
-        loss, max_q_value, min_q_value = summaries
-        self.buffer['loss'].append(loss)
-        self.buffer['max_q_value'].append(max_q_value)
-        self.buffer['min_q_value'].append(min_q_value)
+    def update_summaries(self, summaries):
+        for key in summaries:
+            self.buffer[key].append(summaries[key])
 
     def add_summary(self, summary_writer, total_t, time):
         s = {'time': time}
@@ -42,39 +40,38 @@ class ResultsBuffer(object):
 
 
 def dqn(env,
-        basename,
-        estimator,
-        batch_size,
-        summary_writer,
-        checkpoint_path,
-        exploration_policy_fn,
-        discount_factor=0.99,
-        update_target_every=1,
-        learning_starts=100,
-        memory_size=100000,
-        num_iterations=500000,
-        update_summaries_every=1000,
-        save_model_every=10000):
+        model,
+        base_path,
+        batch_size=32,
+        save_model_every=1000,
+        update_target_every=1000,
+        learning_starts=200,
+        memory_size=500000,
+        num_iterations=6250000):
+    events_path = os.path.join(base_path, 'events')
+    models_path = os.path.join(base_path, 'models')
+    if not os.path.exists(events_path):
+        os.makedirs(events_path)
+    if not os.path.exists(models_path):
+        os.makedirs(models_path)
 
-    estimator.restore(checkpoint_path)
-
+    model.load_model(models_path)
+    summary_writer = SummaryWriter(events_path)
     rewards_history = []
-    pkl_path = 'train_log/{}/rewards.pkl'.format(basename)
+    pkl_path = '{}/rewards.pkl'.format(base_path)
     if os.path.exists(pkl_path):
         with open(pkl_path, 'rb') as f:
             rewards_history = pickle.load(f)
 
-    total_t = estimator.get_global_step()
-
     memory_buffer = Memory(memory_size)
     results_buffer = ResultsBuffer(rewards_history)
+    global_step = model.get_global_step()
 
     try:
         states = env.reset()
         for i in range(learning_starts):
-            q_values = estimator.predict(states)
-            actions = exploration_policy_fn(q_values, total_t)
-            next_states, rewards, dones, _ = env.step(actions)
+            actions = model.get_action(states)
+            next_states, rewards, dones, info = env.step(actions)
 
             memory_buffer.extend(
                 zip(states, actions, rewards, next_states, dones))
@@ -83,31 +80,27 @@ def dqn(env,
         states = env.reset()
         start = time.time()
         for i in range(num_iterations):
-            q_values = estimator.predict(states)
-            actions = exploration_policy_fn(q_values, total_t)
+            actions = model.get_action(states)
             next_states, rewards, dones, info = env.step(actions)
 
-            results_buffer.update_infos(info, total_t)
+            results_buffer.update_infos(info, global_step)
             memory_buffer.extend(
                 zip(states, actions, rewards, next_states, dones))
 
-            # update
-            total_t, summaries = estimator.update(
-                discount_factor, *memory_buffer.sample(batch_size))
-            results_buffer.update_summaries(summaries, total_t)
+            global_step, summaries = model.update(
+                *memory_buffer.sample(batch_size))
+            results_buffer.update_summaries(summaries)
 
-            if total_t % update_target_every == 0:
-                estimator.target_update()
+            if global_step % update_target_every == 0:
+                model.update_target()
 
-            if total_t % update_summaries_every == 0:
+            if global_step % save_model_every == 0:
                 t = time.time() - start
-                print("global_step: {}, delta_time: {}.".format(total_t, t))
-                results_buffer.add_summary(summary_writer, total_t, t)
+                model.save_model(models_path)
+                print("Save model, global_step: {}, delta_time: {}.".format(
+                    global_step, t))
+                results_buffer.add_summary(summary_writer, global_step, t)
                 start = time.time()
-
-            if total_t % save_model_every == 0:
-                estimator.save(checkpoint_path)
-                print("save model...")
 
             states = next_states
 
@@ -115,7 +108,6 @@ def dqn(env,
         raise e
 
     finally:
-        estimator.save(checkpoint_path)
-
+        model.save_model(models_path)
         with open(pkl_path, 'wb') as f:
             pickle.dump(results_buffer.rewards_history, f)
