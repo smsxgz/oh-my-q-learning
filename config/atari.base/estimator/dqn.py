@@ -52,9 +52,7 @@ class Dqn(TFEstimator):
                done_batch):
         # batch_size = state_batch.shape[0]
         target_next_q_vals = self.sess.run(
-            self.target_qvals, feed_dict={
-                self.input: next_state_batch
-            })
+            self.target_qvals, feed_dict={self.input: next_state_batch})
 
         targets = reward_batch + (
             1 - done_batch) * self.discount * target_next_q_vals.max(axis=1)
@@ -132,9 +130,7 @@ class SoftDqn(TFEstimator):
                done_batch):
         # batch_size = state_batch.shape[0]
         target_next_q_vals = self.sess.run(
-            self.target_qvals, feed_dict={
-                self.input: next_state_batch
-            })
+            self.target_qvals, feed_dict={self.input: next_state_batch})
 
         targets = reward_batch + (
             1 - done_batch) * self.discount * target_next_q_vals.max(axis=1)
