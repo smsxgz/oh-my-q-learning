@@ -40,7 +40,7 @@ def main(game_name, model_name, write_video):
         r = 0
         tot = 0
         while True:
-            action = estimator.get_action(np.array([state]), 0.0)
+            action = estimator.get_action(np.array([state]), 0.01)
             state, reward, done, info = env.step(action)
             r += reward
             tot += 1
@@ -64,7 +64,7 @@ def main(game_name, model_name, write_video):
             state = env.reset()
             r = 0
             while True:
-                action = estimator.get_action(np.array([state]), 0.0)
+                action = estimator.get_action(np.array([state]), 0.01)
                 state, reward, done, info = env.step(action)
                 r += reward
                 if done:

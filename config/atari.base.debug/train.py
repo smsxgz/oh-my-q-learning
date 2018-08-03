@@ -13,22 +13,15 @@ from util import train_path
 @click.option('--num_agents', type=int, default=32)
 @click.option('--update_target_every', type=int, default=1000)
 @click.option('--model_name', default='dqn')
-@click.option('--tau', type=float, default=0.001)
-def main(game_name, lr, num_agents, update_target_every, model_name, tau):
+def main(game_name, lr, num_agents, update_target_every, model_name):
     assert 'NoFrameskip-v4' in game_name
-
-    if 'soft' in model_name:
-        update_target_every = 1
 
     basename = '{}:lr={}:na={}:ute={}:{}'.format(
         game_name[:-14], lr, num_agents, update_target_every, model_name)
 
-    if 'soft' in model_name:
-        basename += ':tau={}'.format(tau)
-
     env = Agent(num_agents, game_name, basename)
     try:
-        estimator = get_estimator(model_name, env.action_n, lr, 0.99, tau=tau)
+        estimator = get_estimator(model_name, env.action_n, lr, 0.99)
         base_path = os.path.join(train_path, basename)
         print("start training!!")
         dqn(env,

@@ -34,7 +34,7 @@ class TFEstimator(object):
     def get_qvals(self, obs):
         return self.sess.run(self.qvals, feed_dict={self.input: obs})
 
-    def _net(self, x, trainable=True):
+    def _net(self, x):
         conv1 = tf.contrib.layers.conv2d(x, 32, 8, 4)
         conv2 = tf.contrib.layers.conv2d(conv1, 64, 4, 2)
         conv3 = tf.contrib.layers.conv2d(conv2, 64, 3, 1)
